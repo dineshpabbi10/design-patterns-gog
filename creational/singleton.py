@@ -59,8 +59,8 @@ class ParagonNSingletonManager:
 a = ParagonNSingletonManager.get_client("my_api_key")
 b = ParagonNSingletonManager.get_client("my_api_key")
 
-print(a is b)  # Should print True, confirming both are the same instance
 
+print(a is b)  # Should print True, confirming both are the same instance
 
 # Test multi-threaded access
 def access_client():
@@ -70,6 +70,7 @@ def access_client():
     print(f"Refreshed token: {client.token}")
 
 import threading
+
 threads = []
 for i in range(5):
     t = threading.Thread(target=access_client)
