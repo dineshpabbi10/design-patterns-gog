@@ -29,157 +29,342 @@ def ingest_data(backend_type, data):
 
 ## Solution
 
-Use **Bridge** to decouple **abstraction** (ingestion job) from **implementation** (storage backend):
+Implement the bridge by separating the abstraction (ingestion logic) from implementations (storage backends):
 
 ```python
 from abc import ABC, abstractmethod
-from typing import Any, Dict, BinaryIO
-import boto3
-from google.cloud import storage as gcs_storage
-import os
+from threading import Lock
 
-# Implementation interface (storage backends)
-class StorageImplementation(ABC):
-    """Abstract storage backend."""
+# Implementation interface - storage backends
+class StorageBackend(ABC):
+    """Abstract interface for storage operations."""
     
     @abstractmethod
-    def write(self, key: str, data: bytes) -> None:
-        """Write data to storage."""
-        raise NotImplementedError
+    def write(self, key: str, data: bytes):
+        """Write data (idempotent - skips if exists)."""
+        raise NotImplementedError("write method not implemented")
+
+    @abstractmethod
+    def update(self, key: str, data: bytes):
+        """Update existing data (raises KeyError if not exists)."""
+        raise NotImplementedError("update method not implemented")
     
     @abstractmethod
     def read(self, key: str) -> bytes:
-        """Read data from storage."""
-        raise NotImplementedError
+        """Read data from the backend."""
+        raise NotImplementedError("read method not implemented")
     
     @abstractmethod
     def exists(self, key: str) -> bool:
-        """Check if key exists."""
-        raise NotImplementedError
-
-
-# Concrete implementations
-class S3Storage(StorageImplementation):
-    """S3 backend implementation."""
+        """Check if data exists in the backend."""
+        raise NotImplementedError("exists method not implemented")
     
-    def __init__(self, bucket_name: str, region: str = "us-east-1"):
+    @abstractmethod
+    def delete(self, key: str):
+        """Delete data from the backend."""
+        raise NotImplementedError("delete method not implemented")
+
+
+# Concrete Implementation: S3
+class S3Storage(StorageBackend):
+    """AWS S3 storage backend."""
+    
+    update_lock = Lock()
+    
+    def __init__(self, bucket_name: str):
+        import boto3
+        self.s3_client = boto3.client("s3")
         self.bucket_name = bucket_name
-        self.client = boto3.client("s3", region_name=region)
-    
-    def write(self, key: str, data: bytes) -> None:
-        self.client.put_object(Bucket=self.bucket_name, Key=key, Body=data)
-    
+
+    def write(self, key: str, data: bytes):
+        with self.update_lock:
+            if not self.exists(key):
+                self.s3_client.put_object(Bucket=self.bucket_name, Key=key, Body=data)
+            else:
+                print(f"Data with key {key} already exists in S3. Skipping write.")
+
+    def update(self, key: str, data: bytes):
+        with self.update_lock:
+            if self.exists(key):
+                self.s3_client.put_object(Bucket=self.bucket_name, Key=key, Body=data)
+            else:
+                raise KeyError(f"Key {key} does not exist in S3. Cannot update non-existent key.")
+
     def read(self, key: str) -> bytes:
-        response = self.client.get_object(Bucket=self.bucket_name, Key=key)
-        return response["Body"].read()
-    
+        response = self.s3_client.get_object(Bucket=self.bucket_name, Key=key)
+        return response['Body'].read()
+
     def exists(self, key: str) -> bool:
         try:
-            self.client.head_object(Bucket=self.bucket_name, Key=key)
+            self.s3_client.head_object(Bucket=self.bucket_name, Key=key)
             return True
-        except Exception:
+        except self.s3_client.exceptions.NoSuchKey:
             return False
 
+    def delete(self, key: str):
+        with self.update_lock:
+            if self.exists(key):
+                self.s3_client.delete_object(Bucket=self.bucket_name, Key=key)
 
-class LocalStorage(StorageImplementation):
-    """Local filesystem backend implementation."""
+
+# Concrete Implementation: Local Filesystem
+class LocalStorage(StorageBackend):
+    """Local filesystem storage backend."""
     
-    def __init__(self, base_path: str = "/data"):
+    update_lock = Lock()
+
+    def __init__(self, base_path: str):
+        import os
         self.base_path = base_path
         os.makedirs(base_path, exist_ok=True)
-    
-    def write(self, key: str, data: bytes) -> None:
-        file_path = os.path.join(self.base_path, key)
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, "wb") as f:
-            f.write(data)
-    
+
+    def write(self, key: str, data: bytes):
+        with self.update_lock:
+            if not self.exists(key):
+                with open(f"{self.base_path}/{key}", "wb") as f:
+                    f.write(data)
+            else:
+                print(f"Data with key {key} already exists in Local Storage. Skipping write.")
+
+    def update(self, key: str, data: bytes):
+        with self.update_lock:
+            if self.exists(key):
+                with open(f"{self.base_path}/{key}", "wb") as f:
+                    f.write(data)
+            else:
+                raise KeyError(f"Key {key} does not exist in Local Storage. Cannot update non-existent key.")
+            
     def read(self, key: str) -> bytes:
-        file_path = os.path.join(self.base_path, key)
-        with open(file_path, "rb") as f:
+        with open(f"{self.base_path}/{key}", "rb") as f:
             return f.read()
-    
+
     def exists(self, key: str) -> bool:
-        return os.path.exists(os.path.join(self.base_path, key))
+        import os
+        return os.path.exists(f"{self.base_path}/{key}")
+
+    def delete(self, key: str):
+        with self.update_lock:
+            if self.exists(key):
+                import os
+                os.remove(f"{self.base_path}/{key}")
 
 
-class GCSStorage(StorageImplementation):
-    """Google Cloud Storage backend implementation."""
+# Concrete Implementation: Google Cloud Storage
+class GCSStorage(StorageBackend):
+    """Google Cloud Storage backend."""
     
-    def __init__(self, bucket_name: str, project_id: str = None):
-        self.bucket_name = bucket_name
-        if project_id:
-            os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
-        self.client = gcs_storage.Client()
+    update_lock = Lock()
+    
+    def __init__(self, bucket_name: str):
+        from google.cloud import storage
+        self.client = storage.Client()
         self.bucket = self.client.bucket(bucket_name)
-    
-    def write(self, key: str, data: bytes) -> None:
-        blob = self.bucket.blob(key)
-        blob.upload_from_string(data)
-    
+
+    def write(self, key: str, data: bytes):
+        with self.update_lock:
+            if not self.exists(key):
+                blob = self.bucket.blob(key)
+                blob.upload_from_string(data)
+            else:
+                print(f"Data with key {key} already exists in GCS Storage. Skipping write.")
+
+    def update(self, key: str, data: bytes):
+        with self.update_lock:
+            if self.exists(key):
+                blob = self.bucket.blob(key)
+                blob.upload_from_string(data)
+            else:
+                raise KeyError(f"Key {key} does not exist in GCS Storage. Cannot update non-existent key.")
+
     def read(self, key: str) -> bytes:
         blob = self.bucket.blob(key)
         return blob.download_as_bytes()
-    
+
     def exists(self, key: str) -> bool:
         blob = self.bucket.blob(key)
         return blob.exists()
 
+    def delete(self, key: str):
+        with self.update_lock:
+            if self.exists(key):
+                blob = self.bucket.blob(key)
+                blob.delete()
 
-# Abstraction (ingestion logic)
+
+# Concrete Implementation: In-memory Mock (for testing)
+class MockStorage(StorageBackend):
+    """In-memory mock storage for testing."""
+    
+    update_lock = Lock()
+
+    def __init__(self):
+        self.storage = {}
+
+    def write(self, key: str, data: bytes):
+        with self.update_lock:
+            if not self.exists(key):
+                self.storage[key] = data
+            else:
+                print(f"Data with key {key} already exists in Mock Storage. Skipping write.")
+
+    def update(self, key: str, data: bytes):
+        with self.update_lock:
+            if self.exists(key):
+                self.storage[key] = data
+            else:
+                raise KeyError(f"Key {key} does not exist in Mock Storage. Cannot update non-existent key.")
+            
+    def read(self, key: str) -> bytes:
+        return self.storage[key]
+
+    def exists(self, key: str) -> bool:
+        return key in self.storage
+
+    def delete(self, key: str):
+        with self.update_lock:
+            if self.exists(key):
+                del self.storage[key]
+
+
+# Abstraction: Ingestion Logic (independent of storage backend)
 class IngestJob:
-    """Ingestion job - independent of storage backend."""
+    """Ingestion job that works with any storage backend."""
     
-    def __init__(self, storage: StorageImplementation, job_config: Dict[str, Any]):
-        self.storage = storage  # Bridge to implementation
-        self.config = job_config
-    
-    def ingest(self, source_data: bytes, destination_key: str) -> None:
-        """Ingest data - storage backend is pluggable."""
-        print(f"Ingesting data to {destination_key}...")
-        
-        # Check if already exists (idempotency)
-        if self.storage.exists(destination_key):
-            print(f"Data already exists at {destination_key}, skipping...")
-            return
-        
-        # Write to storage (backend-agnostic)
-        self.storage.write(destination_key, source_data)
-        print(f"Successfully wrote to {destination_key}")
-    
-    def process_batch(self, batch_items: list) -> None:
-        """Process multiple items."""
-        for item in batch_items:
-            self.ingest(item["data"], item["key"])
-    
-    def get_metadata(self) -> Dict[str, Any]:
-        """Return job metadata."""
-        return {
-            "name": self.config.get("name"),
-            "backend": self.storage.__class__.__name__,
-            "status": "running",
-        }
+    def __init__(self, backend: StorageBackend):
+        self.backend = backend
+
+    def execute(self, data_key: str, data: bytes):
+        """Execute ingestion with idempotency check."""
+        if not self.backend.exists(data_key):
+            self.backend.write(data_key, data)
+        else:
+            print(f"Data with key {data_key} already exists. Skipping write.")
 ```
 
-## Usage: Pluggable Storage Backends
+## Usage Examples
+
+### Basic Usage: Production, Testing, and Development
 
 ```python
 # Production: use S3
-prod_storage = S3Storage(bucket_name="prod-data-lake", region="us-west-2")
-prod_job = IngestJob(prod_storage, {"name": "prod_etl"})
-prod_job.ingest(b"production data", "2025-12-16/customer_data.parquet")
+s3_backend = S3Storage(bucket_name="prod-data-lake")
+ingest_job = IngestJob(s3_backend)
+ingest_job.execute("2025-12-16/customer_data.parquet", b"production data")
 
-# Testing: use local filesystem
-test_storage = LocalStorage(base_path="/tmp/test-data")
-test_job = IngestJob(test_storage, {"name": "test_etl"})
-test_job.ingest(b"test data", "2025-12-16/customer_data.parquet")
+# Local Development: use local filesystem
+local_backend = LocalStorage("/tmp/data")
+ingest_job_local = IngestJob(local_backend)
+ingest_job_local.execute("example_key", b"sample data")
 
-# Multi-cloud: use GCS
-gcs_storage = GCSStorage(bucket_name="multi-cloud-data")
-gcs_job = IngestJob(gcs_storage, {"name": "gcs_etl"})
-gcs_job.ingest(b"gcs data", "2025-12-16/customer_data.parquet")
+# Testing: use in-memory mock storage
+mock_backend = MockStorage()
+ingest_job_test = IngestJob(mock_backend)
+ingest_job_test.execute("example_key", b"sample data in mock")
 
-# Same ingestion logic, different backends!
+# Multi-cloud: use Google Cloud Storage
+gcs_backend = GCSStorage(bucket_name="multi-cloud-data")
+ingest_job_gcs = IngestJob(gcs_backend)
+ingest_job_gcs.execute("2025-12-16/customer_data.parquet", b"gcs data")
+```
+
+### Demonstrating the Bridge: Same Logic, Different Backends
+
+```python
+# The key benefit: IngestJob logic is identical regardless of backend
+def run_ingestion_pipeline(backend: StorageBackend, data_items: list):
+    """Generic pipeline - works with ANY storage backend."""
+    job = IngestJob(backend)
+    for item in data_items:
+        job.execute(item["key"], item["data"])
+    print("Pipeline complete!")
+
+# Use the same function with different backends
+data = [
+    {"key": "file1.txt", "data": b"content1"},
+    {"key": "file2.txt", "data": b"content2"},
+]
+
+# Try with mock first
+mock_backend = MockStorage()
+run_ingestion_pipeline(mock_backend, data)
+
+# Deploy with S3
+s3_backend = S3Storage(bucket_name="my-bucket")
+run_ingestion_pipeline(s3_backend, data)
+
+# No code changes! Just swap the backend.
+```
+
+### Thread-Safe Updates with Write and Update Methods
+
+```python
+# Write: idempotent, skips if exists (used for initial writes)
+backend = MockStorage()
+backend.write("user:123", b'{"name": "Alice"}')  # Succeeds
+backend.write("user:123", b'{"name": "Bob"}')    # Skips (already exists)
+
+# Update: requires existing key (used for updates/patches)
+try:
+    backend.update("user:123", b'{"name": "Bob"}')  # Succeeds
+    backend.update("user:999", b'{"name": "Charlie"}')  # Raises KeyError
+except KeyError as e:
+    print(f"Update failed: {e}")
+```
+
+### Concurrent Access with Lock Protection
+
+```python
+import threading
+
+def ingest_in_thread(backend: StorageBackend, key: str, data: bytes):
+    job = IngestJob(backend)
+    job.execute(key, data)
+
+# Test concurrent access with mock backend
+mock_backend = MockStorage()
+threads = []
+
+for i in range(5):
+    t = threading.Thread(
+        target=ingest_in_thread, 
+        args=(mock_backend, "concurrent_key", f"data_{i}".encode())
+    )
+    threads.append(t)
+    t.start()
+
+for t in threads:
+    t.join()
+
+print(f"Final data in mock: {mock_backend.read('concurrent_key')}")
+# All threads are synchronized via Lock - no race conditions
+```
+
+### Testing with Mock Backend
+
+```python
+# Unit test example - no need for real AWS/GCS credentials
+def test_ingest_job_with_mock_storage():
+    backend = MockStorage()
+    ingest_job = IngestJob(backend)
+    
+    key = "ingest_key"
+    data = b"ingest data"
+    
+    # Execute ingestion
+    ingest_job.execute(key, data)
+    assert backend.exists(key) == True
+    
+    # Verify data integrity
+    read_data = backend.read(key)
+    assert read_data == data
+    
+    # Test idempotency: second execute should skip
+    ingest_job.execute(key, data)
+    assert backend.exists(key) == True
+    
+    # Cleanup
+    backend.delete(key)
+    assert backend.exists(key) == False
 ```
 
 ## Benefits
