@@ -793,13 +793,74 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#usage-pluggable-storage-backends" class="md-nav__link">
+  <a href="#usage-examples" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Usage: Pluggable Storage Backends
+        Usage Examples
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Usage Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-usage-production-testing-and-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Usage: Production, Testing, and Development
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#demonstrating-the-bridge-same-logic-different-backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Demonstrating the Bridge: Same Logic, Different Backends
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#thread-safe-updates-with-write-and-update-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Thread-Safe Updates with Write and Update Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#concurrent-access-with-lock-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concurrent Access with Lock Protection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#testing-with-mock-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing with Mock Backend
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1113,91 +1174,150 @@
 </code></pre></div>
 <p><strong>Problem</strong>: Ingestion logic is tightly coupled to storage implementation.</p>
 <h2 id="solution">Solution</h2>
-<p>Use <strong>Bridge</strong> to decouple <strong>abstraction</strong> (ingestion job) from <strong>implementation</strong> (storage backend):</p>
+<p>Implement the bridge by separating the abstraction (ingestion logic) from implementations (storage backends):</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">BinaryIO</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">boto3</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">google.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">storage</span> <span class="k">as</span> <span class="n">gcs_storage</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">threading</span><span class="w"> </span><span class="kn">import</span> <span class="n">Lock</span>
 
-<span class="c1"># Implementation interface (storage backends)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">StorageImplementation</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract storage backend.&quot;&quot;&quot;</span>
+<span class="c1"># Implementation interface - storage backends</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">StorageBackend</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract interface for storage operations.&quot;&quot;&quot;</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write data to storage.&quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write data (idempotent - skips if exists).&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;write method not implemented&quot;</span><span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update existing data (raises KeyError if not exists).&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;update method not implemented&quot;</span><span class="p">)</span>
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read data from storage.&quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read data from the backend.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;read method not implemented&quot;</span><span class="p">)</span>
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if key exists.&quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if data exists in the backend.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;exists method not implemented&quot;</span><span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete data from the backend.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;delete method not implemented&quot;</span><span class="p">)</span>
 
 
-<span class="c1"># Concrete implementations</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">S3Storage</span><span class="p">(</span><span class="n">StorageImplementation</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;S3 backend implementation.&quot;&quot;&quot;</span>
+<span class="c1"># Concrete Implementation: S3</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">S3Storage</span><span class="p">(</span><span class="n">StorageBackend</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;AWS S3 storage backend.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">region</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;us-east-1&quot;</span><span class="p">):</span>
+    <span class="n">update_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">boto3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s3_client</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="s2">&quot;s3&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span> <span class="o">=</span> <span class="n">bucket_name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="s2">&quot;s3&quot;</span><span class="p">,</span> <span class="n">region_name</span><span class="o">=</span><span class="n">region</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">put_object</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="n">Key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">Body</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_lock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">s3_client</span><span class="o">.</span><span class="n">put_object</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="n">Key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">Body</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data with key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> already exists in S3. Skipping write.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_lock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">s3_client</span><span class="o">.</span><span class="n">put_object</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="n">Key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">Body</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> does not exist in S3. Cannot update non-existent key.&quot;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="n">Key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;Body&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s3_client</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="n">Key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span><span class="p">[</span><span class="s1">&#39;Body&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">head_object</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="n">Key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s3_client</span><span class="o">.</span><span class="n">head_object</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="n">Key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">s3_client</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">NoSuchKey</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_lock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">s3_client</span><span class="o">.</span><span class="n">delete_object</span><span class="p">(</span><span class="n">Bucket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="n">Key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
 
-<span class="k">class</span><span class="w"> </span><span class="nc">LocalStorage</span><span class="p">(</span><span class="n">StorageImplementation</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Local filesystem backend implementation.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;/data&quot;</span><span class="p">):</span>
+<span class="c1"># Concrete Implementation: Local Filesystem</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LocalStorage</span><span class="p">(</span><span class="n">StorageBackend</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Local filesystem storage backend.&quot;&quot;&quot;</span>
+
+    <span class="n">update_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_path</span> <span class="o">=</span> <span class="n">base_path</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_path</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">file_path</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_lock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data with key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> already exists in Local Storage. Skipping write.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_lock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> does not exist in Local Storage. Cannot update non-existent key.&quot;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-        <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_path</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_path</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_lock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+                <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base_path</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">GCSStorage</span><span class="p">(</span><span class="n">StorageImplementation</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Google Cloud Storage backend implementation.&quot;&quot;&quot;</span>
+<span class="c1"># Concrete Implementation: Google Cloud Storage</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GCSStorage</span><span class="p">(</span><span class="n">StorageBackend</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Google Cloud Storage backend.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span> <span class="o">=</span> <span class="n">bucket_name</span>
-        <span class="k">if</span> <span class="n">project_id</span><span class="p">:</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;GOOGLE_CLOUD_PROJECT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">project_id</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">gcs_storage</span><span class="o">.</span><span class="n">Client</span><span class="p">()</span>
+    <span class="n">update_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">google.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">storage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">Client</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bucket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">bucket</span><span class="p">(</span><span class="n">bucket_name</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">blob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket</span><span class="o">.</span><span class="n">blob</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-        <span class="n">blob</span><span class="o">.</span><span class="n">upload_from_string</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_lock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+                <span class="n">blob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket</span><span class="o">.</span><span class="n">blob</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                <span class="n">blob</span><span class="o">.</span><span class="n">upload_from_string</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data with key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> already exists in GCS Storage. Skipping write.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_lock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+                <span class="n">blob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket</span><span class="o">.</span><span class="n">blob</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                <span class="n">blob</span><span class="o">.</span><span class="n">upload_from_string</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> does not exist in GCS Storage. Cannot update non-existent key.&quot;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
         <span class="n">blob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket</span><span class="o">.</span><span class="n">blob</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
@@ -1207,58 +1327,171 @@
         <span class="n">blob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket</span><span class="o">.</span><span class="n">blob</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">blob</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_lock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+                <span class="n">blob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket</span><span class="o">.</span><span class="n">blob</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                <span class="n">blob</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 
-<span class="c1"># Abstraction (ingestion logic)</span>
+
+<span class="c1"># Concrete Implementation: In-memory Mock (for testing)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MockStorage</span><span class="p">(</span><span class="n">StorageBackend</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;In-memory mock storage for testing.&quot;&quot;&quot;</span>
+
+    <span class="n">update_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storage</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_lock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">storage</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data with key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> already exists in Mock Storage. Skipping write.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_lock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">storage</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> does not exist in Mock Storage. Cannot update non-existent key.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_lock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+
+<span class="c1"># Abstraction: Ingestion Logic (independent of storage backend)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">IngestJob</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ingestion job - independent of storage backend.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ingestion job that works with any storage backend.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">storage</span><span class="p">:</span> <span class="n">StorageImplementation</span><span class="p">,</span> <span class="n">job_config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">storage</span> <span class="o">=</span> <span class="n">storage</span>  <span class="c1"># Bridge to implementation</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">job_config</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="n">StorageBackend</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">=</span> <span class="n">backend</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">ingest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">destination_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ingest data - storage backend is pluggable.&quot;&quot;&quot;</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ingesting data to </span><span class="si">{</span><span class="n">destination_key</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Check if already exists (idempotency)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">destination_key</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data already exists at </span><span class="si">{</span><span class="n">destination_key</span><span class="si">}</span><span class="s2">, skipping...&quot;</span><span class="p">)</span>
-            <span class="k">return</span>
-
-        <span class="c1"># Write to storage (backend-agnostic)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">storage</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">destination_key</span><span class="p">,</span> <span class="n">source_data</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully wrote to </span><span class="si">{</span><span class="n">destination_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">process_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_items</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process multiple items.&quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">batch_items</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ingest</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">])</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return job metadata.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">),</span>
-            <span class="s2">&quot;backend&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
-            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;running&quot;</span><span class="p">,</span>
-        <span class="p">}</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute ingestion with idempotency check.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_key</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data_key</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data with key </span><span class="si">{</span><span class="n">data_key</span><span class="si">}</span><span class="s2"> already exists. Skipping write.&quot;</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="usage-pluggable-storage-backends">Usage: Pluggable Storage Backends</h2>
+<h2 id="usage-examples">Usage Examples</h2>
+<h3 id="basic-usage-production-testing-and-development">Basic Usage: Production, Testing, and Development</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Production: use S3</span>
-<span class="n">prod_storage</span> <span class="o">=</span> <span class="n">S3Storage</span><span class="p">(</span><span class="n">bucket_name</span><span class="o">=</span><span class="s2">&quot;prod-data-lake&quot;</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="s2">&quot;us-west-2&quot;</span><span class="p">)</span>
-<span class="n">prod_job</span> <span class="o">=</span> <span class="n">IngestJob</span><span class="p">(</span><span class="n">prod_storage</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;prod_etl&quot;</span><span class="p">})</span>
-<span class="n">prod_job</span><span class="o">.</span><span class="n">ingest</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;production data&quot;</span><span class="p">,</span> <span class="s2">&quot;2025-12-16/customer_data.parquet&quot;</span><span class="p">)</span>
+<span class="n">s3_backend</span> <span class="o">=</span> <span class="n">S3Storage</span><span class="p">(</span><span class="n">bucket_name</span><span class="o">=</span><span class="s2">&quot;prod-data-lake&quot;</span><span class="p">)</span>
+<span class="n">ingest_job</span> <span class="o">=</span> <span class="n">IngestJob</span><span class="p">(</span><span class="n">s3_backend</span><span class="p">)</span>
+<span class="n">ingest_job</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;2025-12-16/customer_data.parquet&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;production data&quot;</span><span class="p">)</span>
 
-<span class="c1"># Testing: use local filesystem</span>
-<span class="n">test_storage</span> <span class="o">=</span> <span class="n">LocalStorage</span><span class="p">(</span><span class="n">base_path</span><span class="o">=</span><span class="s2">&quot;/tmp/test-data&quot;</span><span class="p">)</span>
-<span class="n">test_job</span> <span class="o">=</span> <span class="n">IngestJob</span><span class="p">(</span><span class="n">test_storage</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test_etl&quot;</span><span class="p">})</span>
-<span class="n">test_job</span><span class="o">.</span><span class="n">ingest</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;test data&quot;</span><span class="p">,</span> <span class="s2">&quot;2025-12-16/customer_data.parquet&quot;</span><span class="p">)</span>
+<span class="c1"># Local Development: use local filesystem</span>
+<span class="n">local_backend</span> <span class="o">=</span> <span class="n">LocalStorage</span><span class="p">(</span><span class="s2">&quot;/tmp/data&quot;</span><span class="p">)</span>
+<span class="n">ingest_job_local</span> <span class="o">=</span> <span class="n">IngestJob</span><span class="p">(</span><span class="n">local_backend</span><span class="p">)</span>
+<span class="n">ingest_job_local</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;example_key&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;sample data&quot;</span><span class="p">)</span>
 
-<span class="c1"># Multi-cloud: use GCS</span>
-<span class="n">gcs_storage</span> <span class="o">=</span> <span class="n">GCSStorage</span><span class="p">(</span><span class="n">bucket_name</span><span class="o">=</span><span class="s2">&quot;multi-cloud-data&quot;</span><span class="p">)</span>
-<span class="n">gcs_job</span> <span class="o">=</span> <span class="n">IngestJob</span><span class="p">(</span><span class="n">gcs_storage</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;gcs_etl&quot;</span><span class="p">})</span>
-<span class="n">gcs_job</span><span class="o">.</span><span class="n">ingest</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;gcs data&quot;</span><span class="p">,</span> <span class="s2">&quot;2025-12-16/customer_data.parquet&quot;</span><span class="p">)</span>
+<span class="c1"># Testing: use in-memory mock storage</span>
+<span class="n">mock_backend</span> <span class="o">=</span> <span class="n">MockStorage</span><span class="p">()</span>
+<span class="n">ingest_job_test</span> <span class="o">=</span> <span class="n">IngestJob</span><span class="p">(</span><span class="n">mock_backend</span><span class="p">)</span>
+<span class="n">ingest_job_test</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;example_key&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;sample data in mock&quot;</span><span class="p">)</span>
 
-<span class="c1"># Same ingestion logic, different backends!</span>
+<span class="c1"># Multi-cloud: use Google Cloud Storage</span>
+<span class="n">gcs_backend</span> <span class="o">=</span> <span class="n">GCSStorage</span><span class="p">(</span><span class="n">bucket_name</span><span class="o">=</span><span class="s2">&quot;multi-cloud-data&quot;</span><span class="p">)</span>
+<span class="n">ingest_job_gcs</span> <span class="o">=</span> <span class="n">IngestJob</span><span class="p">(</span><span class="n">gcs_backend</span><span class="p">)</span>
+<span class="n">ingest_job_gcs</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;2025-12-16/customer_data.parquet&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;gcs data&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="demonstrating-the-bridge-same-logic-different-backends">Demonstrating the Bridge: Same Logic, Different Backends</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># The key benefit: IngestJob logic is identical regardless of backend</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_ingestion_pipeline</span><span class="p">(</span><span class="n">backend</span><span class="p">:</span> <span class="n">StorageBackend</span><span class="p">,</span> <span class="n">data_items</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generic pipeline - works with ANY storage backend.&quot;&quot;&quot;</span>
+    <span class="n">job</span> <span class="o">=</span> <span class="n">IngestJob</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data_items</span><span class="p">:</span>
+        <span class="n">job</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Pipeline complete!&quot;</span><span class="p">)</span>
+
+<span class="c1"># Use the same function with different backends</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;file1.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="sa">b</span><span class="s2">&quot;content1&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;file2.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="sa">b</span><span class="s2">&quot;content2&quot;</span><span class="p">},</span>
+<span class="p">]</span>
+
+<span class="c1"># Try with mock first</span>
+<span class="n">mock_backend</span> <span class="o">=</span> <span class="n">MockStorage</span><span class="p">()</span>
+<span class="n">run_ingestion_pipeline</span><span class="p">(</span><span class="n">mock_backend</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+<span class="c1"># Deploy with S3</span>
+<span class="n">s3_backend</span> <span class="o">=</span> <span class="n">S3Storage</span><span class="p">(</span><span class="n">bucket_name</span><span class="o">=</span><span class="s2">&quot;my-bucket&quot;</span><span class="p">)</span>
+<span class="n">run_ingestion_pipeline</span><span class="p">(</span><span class="n">s3_backend</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+<span class="c1"># No code changes! Just swap the backend.</span>
+</code></pre></div>
+<h3 id="thread-safe-updates-with-write-and-update-methods">Thread-Safe Updates with Write and Update Methods</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Write: idempotent, skips if exists (used for initial writes)</span>
+<span class="n">backend</span> <span class="o">=</span> <span class="n">MockStorage</span><span class="p">()</span>
+<span class="n">backend</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;user:123&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;{&quot;name&quot;: &quot;Alice&quot;}&#39;</span><span class="p">)</span>  <span class="c1"># Succeeds</span>
+<span class="n">backend</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;user:123&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;{&quot;name&quot;: &quot;Bob&quot;}&#39;</span><span class="p">)</span>    <span class="c1"># Skips (already exists)</span>
+
+<span class="c1"># Update: requires existing key (used for updates/patches)</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">backend</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;user:123&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;{&quot;name&quot;: &quot;Bob&quot;}&#39;</span><span class="p">)</span>  <span class="c1"># Succeeds</span>
+    <span class="n">backend</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;user:999&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;{&quot;name&quot;: &quot;Charlie&quot;}&#39;</span><span class="p">)</span>  <span class="c1"># Raises KeyError</span>
+<span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Update failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="concurrent-access-with-lock-protection">Concurrent Access with Lock Protection</h3>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">ingest_in_thread</span><span class="p">(</span><span class="n">backend</span><span class="p">:</span> <span class="n">StorageBackend</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+    <span class="n">job</span> <span class="o">=</span> <span class="n">IngestJob</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="n">job</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+<span class="c1"># Test concurrent access with mock backend</span>
+<span class="n">mock_backend</span> <span class="o">=</span> <span class="n">MockStorage</span><span class="p">()</span>
+<span class="n">threads</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">ingest_in_thread</span><span class="p">,</span> 
+        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">mock_backend</span><span class="p">,</span> <span class="s2">&quot;concurrent_key&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;data_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="p">)</span>
+    <span class="n">threads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">threads</span><span class="p">:</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Final data in mock: </span><span class="si">{</span><span class="n">mock_backend</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;concurrent_key&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="c1"># All threads are synchronized via Lock - no race conditions</span>
+</code></pre></div>
+<h3 id="testing-with-mock-backend">Testing with Mock Backend</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Unit test example - no need for real AWS/GCS credentials</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_ingest_job_with_mock_storage</span><span class="p">():</span>
+    <span class="n">backend</span> <span class="o">=</span> <span class="n">MockStorage</span><span class="p">()</span>
+    <span class="n">ingest_job</span> <span class="o">=</span> <span class="n">IngestJob</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+
+    <span class="n">key</span> <span class="o">=</span> <span class="s2">&quot;ingest_key&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;ingest data&quot;</span>
+
+    <span class="c1"># Execute ingestion</span>
+    <span class="n">ingest_job</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">backend</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span>
+
+    <span class="c1"># Verify data integrity</span>
+    <span class="n">read_data</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">read_data</span> <span class="o">==</span> <span class="n">data</span>
+
+    <span class="c1"># Test idempotency: second execute should skip</span>
+    <span class="n">ingest_job</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">backend</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span>
+
+    <span class="c1"># Cleanup</span>
+    <span class="n">backend</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">backend</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span>
 </code></pre></div>
 <h2 id="benefits">Benefits</h2>
 <table>
