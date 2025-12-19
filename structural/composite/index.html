@@ -807,6 +807,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Problem">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#without-composite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Without Composite
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -821,10 +838,198 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#advantages" class="md-nav__link">
+  <a href="#core-design" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Advantages
+        Core Design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#operation-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operation Status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operation-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operation Result
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#component-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Component Interface
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#leaf-operation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Leaf Operation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#composite-operation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Composite Operation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Composite Operation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sequential-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sequential Execution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parallel-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parallel Execution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unified-execution-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unified Execution API
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#progress-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Progress Tracking
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-example-bulk-update-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage Example: Bulk Update Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recursive-composition-nested-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recursive Composition (Nested Workflows)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concurrency-orchestration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concurrency &amp; Orchestration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benefits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benefits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-extensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Extensions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-to-use-composite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use Composite
       
     </span>
   </a>
@@ -1070,121 +1275,332 @@
 
 <h1 id="composite-pattern">Composite Pattern</h1>
 <h2 id="problem">Problem</h2>
-<p>You need to model <strong>hierarchical operations</strong> performed across services. For example, a bulk-update composed of multiple sub-requests to different microservices:</p>
-<div class="highlight"><pre><span></span><code>Bulk Customer Update
-├── Update Identity Service
-│   ├── Update name
-│   └── Update email
-├── Update Billing Service
-│   └── Update subscription status
-└── Update Notification Service
-    └── Re-subscribe to mailing list
+<p>Your <strong>orchestration layer</strong> must execute <strong>hierarchical operations</strong> composed of many smaller sub-operations:</p>
+<ul>
+<li><strong>Bulk updates</strong> spanning multiple microservices</li>
+<li><strong>Fan-out workflows</strong> (user-service → billing → inventory → notifications)</li>
+<li><strong>Long-running batches</strong> with partial progress tracking</li>
+<li><strong>Parallel or sequential execution</strong> depending on the operation</li>
+</ul>
+<p>Each operation may:</p>
+<ul>
+<li>Succeed or fail independently</li>
+<li>Run in parallel or sequence</li>
+<li>Be cancelled mid-flight</li>
+<li>Report partial progress and aggregated errors</li>
+</ul>
+<h3 id="without-composite">Without Composite</h3>
+<p>You end up with <strong>special-case orchestration logic</strong> everywhere:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># ❌ Hard-coded orchestration logic</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">bulk_update</span><span class="p">():</span>
+    <span class="n">user_result</span> <span class="o">=</span> <span class="n">update_user</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">user_result</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">failure</span><span class="p">()</span>
+
+    <span class="n">inventory_result</span> <span class="o">=</span> <span class="n">update_inventory</span><span class="p">()</span>
+    <span class="n">billing_result</span> <span class="o">=</span> <span class="n">update_billing</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">inventory_result</span><span class="o">.</span><span class="n">failed</span> <span class="ow">or</span> <span class="n">billing_result</span><span class="o">.</span><span class="n">failed</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">partial_failure</span><span class="p">()</span>
 </code></pre></div>
-<p>Without Composite, you'd have deeply nested conditionals and ad-hoc aggregation logic.</p>
+<p><strong>Problems:</strong></p>
+<ul>
+<li>Tight coupling between orchestration and execution logic</li>
+<li>No recursive composition</li>
+<li>Hard to parallelize</li>
+<li>Difficult to track progress or aggregate failures</li>
+<li>Adding nested workflows becomes unmanageable</li>
+</ul>
+<hr />
 <h2 id="solution">Solution</h2>
-<p>Implement a tree structure where both leaf and composite nodes share a common interface:</p>
+<p>Use the <strong>Composite Pattern</strong> to model <strong>operations as a tree</strong>:</p>
+<ul>
+<li><strong>LeafOperation</strong> → Executes a single RPC / task</li>
+<li><strong>CompositeOperation</strong> → Executes and aggregates child operations</li>
+<li><strong>Operation interface</strong> → Uniform execution, cancellation, and status tracking</li>
+</ul>
+<p>This allows:</p>
+<ul>
+<li>Recursive composition</li>
+<li>Parallel or sequential execution</li>
+<li>Aggregated success/failure</li>
+<li>Partial execution and progress reporting</li>
+<li>Transparent orchestration</li>
+</ul>
+<hr />
+<h2 id="core-design">Core Design</h2>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">concurrent.futures</span><span class="w"> </span><span class="kn">import</span> <span class="n">ThreadPoolExecutor</span><span class="p">,</span> <span class="n">as_completed</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+</code></pre></div>
+<h3 id="operation-status">Operation Status</h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">OperationStatus</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">PENDING</span> <span class="o">=</span> <span class="s2">&quot;PENDING&quot;</span>
+    <span class="n">IN_PROGRESS</span> <span class="o">=</span> <span class="s2">&quot;IN_PROGRESS&quot;</span>
+    <span class="n">SUCCESS</span> <span class="o">=</span> <span class="s2">&quot;SUCCESS&quot;</span>
+    <span class="n">FAILURE</span> <span class="o">=</span> <span class="s2">&quot;FAILURE&quot;</span>
+</code></pre></div>
+<hr />
+<h3 id="operation-result">Operation Result</h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">OperationResult</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="n">OperationStatus</span><span class="o">.</span><span class="n">PENDING</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">status</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">errors</span> <span class="o">=</span> <span class="n">errors</span> <span class="k">if</span> <span class="n">errors</span> <span class="k">else</span> <span class="p">[]</span>
 
-<span class="k">class</span><span class="w"> </span><span class="nc">Operation</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract operation that can be leaf or composite.&quot;&quot;&quot;</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_complete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="p">{</span><span class="n">OperationStatus</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">,</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">FAILURE</span><span class="p">}</span>
+</code></pre></div>
+<hr />
+<h3 id="component-interface">Component Interface</h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Operation</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OperationResult</span><span class="p">:</span>
+        <span class="k">pass</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute and return result.&quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">pass</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get operation status.&quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">LeafOperation</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Leaf: actual RPC to a microservice.&quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">operation</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">service_name</span> <span class="o">=</span> <span class="n">service_name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">operation</span> <span class="o">=</span> <span class="n">operation</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">payload</span> <span class="o">=</span> <span class="n">payload</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;pending&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute RPC to microservice.&quot;&quot;&quot;</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Executing </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">operation</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">service_name</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
-        <span class="c1"># Call actual microservice</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;service&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">service_name</span><span class="p">,</span> <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;completed&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">CompositeOperation</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Composite: aggregates multiple operations.&quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OperationStatus</span><span class="p">:</span>
+        <span class="k">pass</span>
+</code></pre></div>
+<hr />
+<h2 id="leaf-operation">Leaf Operation</h2>
+<p>Represents a <strong>single RPC / microservice call</strong>.</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">LeafOperation</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">fail</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;pending&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">payload</span> <span class="o">=</span> <span class="n">payload</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fail</span> <span class="o">=</span> <span class="n">fail</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="n">OperationResult</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">add_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add child operation.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OperationResult</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">IN_PROGRESS</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>  <span class="c1"># simulate RPC latency</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> failed&quot;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">SUCCESS</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">FAILURE</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">IN_PROGRESS</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">FAILURE</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">status</span>
+</code></pre></div>
+<hr />
+<h2 id="composite-operation">Composite Operation</h2>
+<p>Executes and aggregates child operations.</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">CompositeOperation</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">children</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">children</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parallel</span> <span class="o">=</span> <span class="n">parallel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="n">OperationResult</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">:</span> <span class="n">Operation</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute all children.&quot;&quot;&quot;</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Executing composite operation: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;running&quot;</span>
+</code></pre></div>
+<hr />
+<h3 id="sequential-execution">Sequential Execution</h3>
+<div class="highlight"><pre><span></span><code>    <span class="k">def</span><span class="w"> </span><span class="nf">_execute_sequential</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">IN_PROGRESS</span>
+        <span class="n">success</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="n">child</span><span class="o">.</span><span class="n">service_name</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="s1">&#39;service_name&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">FAILURE</span><span class="p">:</span>
+                <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;completed&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="n">statuses</span> <span class="o">=</span> <span class="p">[</span><span class="n">child</span><span class="o">.</span><span class="n">get_status</span><span class="p">()</span> <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="s2">&quot;completed&quot;</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">statuses</span><span class="p">):</span>
-            <span class="k">return</span> <span class="s2">&quot;completed&quot;</span>
-        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="s2">&quot;failed&quot;</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">statuses</span><span class="p">):</span>
-            <span class="k">return</span> <span class="s2">&quot;failed&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;running&quot;</span>
-
-
-<span class="c1"># Example: bulk customer update</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">create_bulk_update_operation</span><span class="p">():</span>
-    <span class="n">root</span> <span class="o">=</span> <span class="n">CompositeOperation</span><span class="p">(</span><span class="s2">&quot;BulkCustomerUpdate&quot;</span><span class="p">)</span>
-
-    <span class="c1"># Identity service updates</span>
-    <span class="n">identity_ops</span> <span class="o">=</span> <span class="n">CompositeOperation</span><span class="p">(</span><span class="s2">&quot;IdentityServiceBatch&quot;</span><span class="p">)</span>
-    <span class="n">identity_ops</span><span class="o">.</span><span class="n">add_operation</span><span class="p">(</span><span class="n">LeafOperation</span><span class="p">(</span><span class="s2">&quot;identity&quot;</span><span class="p">,</span> <span class="s2">&quot;update_name&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="s2">&quot;123&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;John Doe&quot;</span><span class="p">}))</span>
-    <span class="n">identity_ops</span><span class="o">.</span><span class="n">add_operation</span><span class="p">(</span><span class="n">LeafOperation</span><span class="p">(</span><span class="s2">&quot;identity&quot;</span><span class="p">,</span> <span class="s2">&quot;update_email&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="s2">&quot;123&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;john@example.com&quot;</span><span class="p">}))</span>
-    <span class="n">root</span><span class="o">.</span><span class="n">add_operation</span><span class="p">(</span><span class="n">identity_ops</span><span class="p">)</span>
-
-    <span class="c1"># Billing service update</span>
-    <span class="n">root</span><span class="o">.</span><span class="n">add_operation</span><span class="p">(</span><span class="n">LeafOperation</span><span class="p">(</span><span class="s2">&quot;billing&quot;</span><span class="p">,</span> <span class="s2">&quot;update_subscription&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="s2">&quot;123&quot;</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;premium&quot;</span><span class="p">}))</span>
-
-    <span class="c1"># Notification service update</span>
-    <span class="n">root</span><span class="o">.</span><span class="n">add_operation</span><span class="p">(</span><span class="n">LeafOperation</span><span class="p">(</span><span class="s2">&quot;notifications&quot;</span><span class="p">,</span> <span class="s2">&quot;subscribe&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="s2">&quot;123&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;marketing&quot;</span><span class="p">}))</span>
-
-    <span class="k">return</span> <span class="n">root</span>
-
-<span class="c1"># Execute</span>
-<span class="n">bulk_op</span> <span class="o">=</span> <span class="n">create_bulk_update_operation</span><span class="p">()</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">bulk_op</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Final status: </span><span class="si">{</span><span class="n">bulk_op</span><span class="o">.</span><span class="n">get_status</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">SUCCESS</span> <span class="k">if</span> <span class="n">success</span> <span class="k">else</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">FAILURE</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span>
 </code></pre></div>
-<h2 id="advantages">Advantages</h2>
+<hr />
+<h3 id="parallel-execution">Parallel Execution</h3>
+<div class="highlight"><pre><span></span><code>    <span class="k">def</span><span class="w"> </span><span class="nf">_execute_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">IN_PROGRESS</span>
+        <span class="n">success</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+            <span class="n">futures</span> <span class="o">=</span> <span class="p">[</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">execute</span><span class="p">)</span> <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">as_completed</span><span class="p">(</span><span class="n">futures</span><span class="p">):</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">FAILURE</span><span class="p">:</span>
+                    <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">SUCCESS</span> <span class="k">if</span> <span class="n">success</span> <span class="k">else</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">FAILURE</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span>
+</code></pre></div>
+<hr />
+<h3 id="unified-execution-api">Unified Execution API</h3>
+<div class="highlight"><pre><span></span><code>    <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_execute_parallel</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallel</span>
+            <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_sequential</span><span class="p">()</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="n">child</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">FAILURE</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">get_status</span><span class="p">()</span> <span class="o">==</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">SUCCESS</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">SUCCESS</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">get_status</span><span class="p">()</span> <span class="o">==</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">FAILURE</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">FAILURE</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">get_status</span><span class="p">()</span> <span class="o">==</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">IN_PROGRESS</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">IN_PROGRESS</span>
+        <span class="k">return</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">PENDING</span>
+</code></pre></div>
+<hr />
+<h3 id="progress-tracking">Progress Tracking</h3>
+<div class="highlight"><pre><span></span><code>    <span class="k">def</span><span class="w"> </span><span class="nf">get_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">100.0</span>
+        <span class="n">completed</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">is_complete</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">completed</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span>
+</code></pre></div>
+<hr />
+<h2 id="usage-example-bulk-update-workflow">Usage Example: Bulk Update Workflow</h2>
+<div class="highlight"><pre><span></span><code><span class="n">bulk_update</span> <span class="o">=</span> <span class="n">CompositeOperation</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;bulk-update&quot;</span><span class="p">,</span>
+    <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">children</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">LeafOperation</span><span class="p">(</span><span class="s2">&quot;user-service&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span>
+        <span class="n">LeafOperation</span><span class="p">(</span><span class="s2">&quot;inventory-service&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;sku&quot;</span><span class="p">:</span> <span class="s2">&quot;A1&quot;</span><span class="p">},</span> <span class="n">fail</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">LeafOperation</span><span class="p">(</span><span class="s2">&quot;billing-service&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;invoice&quot;</span><span class="p">:</span> <span class="mi">123</span><span class="p">}),</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">bulk_update</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Status:&quot;</span><span class="p">,</span> <span class="n">bulk_update</span><span class="o">.</span><span class="n">get_status</span><span class="p">()</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Progress:&quot;</span><span class="p">,</span> <span class="n">bulk_update</span><span class="o">.</span><span class="n">get_progress</span><span class="p">(),</span> <span class="s2">&quot;%&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Errors:&quot;</span><span class="p">,</span> <span class="n">bulk_update</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="recursive-composition-nested-workflows">Recursive Composition (Nested Workflows)</h2>
+<div class="highlight"><pre><span></span><code><span class="n">billing_flow</span> <span class="o">=</span> <span class="n">CompositeOperation</span><span class="p">(</span>
+    <span class="s2">&quot;billing-flow&quot;</span><span class="p">,</span>
+    <span class="n">children</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">LeafOperation</span><span class="p">(</span><span class="s2">&quot;invoice&quot;</span><span class="p">),</span>
+        <span class="n">LeafOperation</span><span class="p">(</span><span class="s2">&quot;payment&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">root</span> <span class="o">=</span> <span class="n">CompositeOperation</span><span class="p">(</span>
+    <span class="s2">&quot;root-workflow&quot;</span><span class="p">,</span>
+    <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">children</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">LeafOperation</span><span class="p">(</span><span class="s2">&quot;user-service&quot;</span><span class="p">),</span>
+        <span class="n">billing_flow</span><span class="p">,</span>
+        <span class="n">LeafOperation</span><span class="p">(</span><span class="s2">&quot;notification-service&quot;</span><span class="p">),</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">root</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<h2 id="concurrency-orchestration">Concurrency &amp; Orchestration</h2>
 <ul>
-<li>Treat leaf and composite nodes uniformly</li>
-<li>Easy to add new operation types</li>
-<li>Natural hierarchical structure</li>
-<li>Partial execution and error handling</li>
+<li>Parallel execution via <code>ThreadPoolExecutor</code></li>
+<li>
+<p>Compatible with:</p>
+</li>
+<li>
+<p>Worker pools</p>
+</li>
+<li>Background job schedulers</li>
+<li>Async orchestration layers</li>
+<li>Supports <strong>best-effort execution</strong> (all children run even if some fail)</li>
+</ul>
+<hr />
+<h2 id="testing-example">Testing Example</h2>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">test_partial_failure</span><span class="p">():</span>
+    <span class="n">op</span> <span class="o">=</span> <span class="n">CompositeOperation</span><span class="p">(</span>
+        <span class="s2">&quot;test&quot;</span><span class="p">,</span>
+        <span class="n">children</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">LeafOperation</span><span class="p">(</span><span class="s2">&quot;ok&quot;</span><span class="p">),</span>
+            <span class="n">LeafOperation</span><span class="p">(</span><span class="s2">&quot;fail&quot;</span><span class="p">,</span> <span class="n">fail</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">OperationStatus</span><span class="o">.</span><span class="n">FAILURE</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+</code></pre></div>
+<hr />
+<h2 id="benefits">Benefits</h2>
+<table>
+<thead>
+<tr>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Uniform interface for simple &amp; complex operations</td>
+<td>More abstraction</td>
+</tr>
+<tr>
+<td>Recursive composition</td>
+<td>Requires careful state handling</td>
+</tr>
+<tr>
+<td>Parallel &amp; sequential execution</td>
+<td>Thread cancellation is cooperative</td>
+</tr>
+<tr>
+<td>Aggregated errors</td>
+<td>Retry logic not built-in</td>
+</tr>
+<tr>
+<td>Progress tracking</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="advanced-extensions">Advanced Extensions</h2>
+<ul>
+<li><strong>Retry Decorator</strong> for operations</li>
+<li><strong>Fail-fast vs best-effort policies</strong></li>
+<li><strong>Compensation / rollback operations</strong></li>
+<li><strong>Timeout-aware execution</strong></li>
+<li><strong>Tracing &amp; metrics decorators</strong></li>
+<li><strong>Async (<code>asyncio</code>) implementation</strong></li>
+</ul>
+<hr />
+<h2 id="when-to-use-composite">When to Use Composite</h2>
+<p>✅ Use when:</p>
+<ul>
+<li>Operations naturally form trees</li>
+<li>You need uniform handling of single and grouped actions</li>
+<li>Orchestration logic must remain clean</li>
+</ul>
+<p>❌ Avoid when:</p>
+<ul>
+<li>Execution order is strictly linear</li>
+<li>No hierarchical grouping exists</li>
 </ul>
 
 

@@ -1494,36 +1494,20 @@
     <span class="k">assert</span> <span class="n">backend</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span>
 </code></pre></div>
 <h2 id="benefits">Benefits</h2>
-<table>
-<thead>
-<tr>
-<th>Pros</th>
-<th>Cons</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Decouple job logic from storage</td>
-<td>Extra abstraction layers</td>
-</tr>
-<tr>
-<td>Add new backends without changing job code</td>
-<td>More code upfront</td>
-</tr>
-<tr>
-<td>Easy to test with mock storage</td>
-<td>Potential performance overhead</td>
-</tr>
-<tr>
-<td>Swap backends at runtime</td>
-<td>Interface mismatches between backends</td>
-</tr>
-<tr>
-<td>Support multi-cloud deployments</td>
-<td></td>
-</tr>
-</tbody>
-</table>
+<p>// Add performance considerations
+| Pros | Cons |
+|------|------|
+| Decouple job logic from storage | Extra abstraction layers |
+| Add new backends without changing job code | More code upfront |
+| Easy to test with mock storage | Potential performance overhead |
+| Swap backends at runtime | Interface mismatches between backends |
+| Support multi-cloud deployments | |
+|------|------|
+| Decouple job logic from storage | Extra abstraction layers |
+| Add new backends without changing job code | More code upfront |
+| Easy to test with mock storage | Potential performance overhead |
+| Swap backends at runtime | Interface mismatches between backends |
+| Support multi-cloud deployments | |</p>
 <h2 id="advanced-storage-factory">Advanced: Storage Factory</h2>
 <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_storage</span><span class="p">(</span><span class="n">backend_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StorageImplementation</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Factory for creating storage backends.&quot;&quot;&quot;</span>
