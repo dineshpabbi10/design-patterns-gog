@@ -145,4 +145,4 @@ MIT License - feel free to use in your projects
 ---
 
 **Last Updated**: December 2025  
-**Documentation**: [https://dineshpabbi10.github.io/design-patterns-gog/](https://dineshpabbi10.github.io/design-patterns-go4/)
+**Documentation**: [https://dineshpabbi10.github.io/design-patterns-go4/](https://dineshpabbi10.github.io/design-patterns-go4/)
