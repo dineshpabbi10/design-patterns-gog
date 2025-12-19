@@ -109,7 +109,7 @@ class CompositeOperation(Operation):
     def add_operation(self, operation: Operation) -> None:
         self.children.append(operation)
 
-    def execute_parallel(self) -> OperationResult:
+    def _execute_parallel(self) -> OperationResult:
         start_time = time.time()
         self.result.status = OperationStatus.IN_PROGRESS
         all_success = True
@@ -129,7 +129,7 @@ class CompositeOperation(Operation):
         )
         return self.result
 
-    def execute_sequential(self) -> OperationResult:
+    def _execute_sequential(self) -> OperationResult:
         start_time = time.time()
         self.result.status = OperationStatus.IN_PROGRESS
         all_success = True
@@ -149,9 +149,9 @@ class CompositeOperation(Operation):
 
     def execute(self):
         if self.use_parallel:
-            return self.execute_parallel()
+            return self._execute_parallel()
         else:
-            return self.execute_sequential()
+            return self._execute_sequential()
 
     def cancel(self) -> None:
         print(f"Cancelling composite operation: {self.name}")
