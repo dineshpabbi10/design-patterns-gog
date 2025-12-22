@@ -1,262 +1,193 @@
-# Proxy Pattern
+# Proxy Pattern: HTTP API Client with Caching, Rate-Limiting, and Circuit Breaker
 
 ## Problem
 
-Your edge services aggregate calls to **ParagoNClient** on behalf of React frontends. You want to add:
-- **Caching**: Avoid repeated API calls for the same user
-- **Rate-limiting**: Respect ParagoN's rate limits
-- **Circuit breaker**: Gracefully handle ParagoN API outages
+Your **HTTP API client** (`ParagoNClient`) is used in edge services and frontends to fetch and update user data:
 
-**Without Proxy**, you'd scatter this logic throughout your code:
+* Repeated API calls for the same user lead to **redundant network requests**
+* High request rates can exceed **third-party API limits**
+* Transient API failures may propagate to clients, causing downtime
+* Managing caching, rate-limits, and circuit-breaking separately makes code **complex and scattered**
+
+### Without Proxy
 
 ```python
-# ❌ Messy: caching, rate-limiting, and circuit-breaking mixed with business logic
-cache = {}
-
-def fetch_user_handler(user_id):
-    # Check cache
-    if user_id in cache:
-        return cache[user_id]
-    
-    # Rate limit check
-    if should_rate_limit():
-        return {"error": "Rate limited"}
-    
-    # Circuit breaker check
-    if circuit_breaker.is_open():
-        return {"error": "Service unavailable"}
-    
-    try:
-        user = paragon_client.fetch_user(user_id)
-        cache[user_id] = user  # Cache result
-        return user
-    except Exception as e:
-        circuit_breaker.record_failure()
-        return {"error": str(e)}
+# ❌ Direct client calls without policies
+user = client.get_user("user123")
+client.update_user("user123", {"plan": "pro"})
 ```
 
-This is mixed with business logic and hard to test.
+**Problems:**
+
+* No caching → repeated fetches always hit the API
+* No rate-limiting → risk of hitting API quotas
+* No circuit breaker → failures propagate to callers
+* Hard to add new policies without modifying client
+
+---
 
 ## Solution
 
-Create a Proxy that wraps the real client and adds cross-cutting concerns transparently:
+Use the **Proxy Pattern** to **wrap the original client** and provide **additional behaviors transparently**:
+
+* **Caching** → store recent API responses to reduce repeated network calls
+* **Rate-limiting** → prevent excessive API requests
+* **Circuit breaker** → stop requests when failures exceed a threshold and allow recovery after cooldown
+* **Transparent interface** → same method signatures as `ParagoNClient`, so callers can swap easily
+
+This allows:
+
+* Centralized policy enforcement
+* Reduced API calls and latency
+* Safe handling of transient failures
+* Simplified client usage for frontends
+
+---
+
+## Core Design
 
 ```python
-from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
 import time
-from collections import defaultdict
-from datetime import datetime, timedelta
+```
 
-class ClientInterface(ABC):
-    @abstractmethod
-    def fetch_user(self, user_id: str) -> Dict[str, Any]:
-        raise NotImplementedError
+### Proxy Class
 
-
-class ParagoNClient(ClientInterface):
-    """Real client - only handles API calls."""
-    
-    def fetch_user(self, user_id: str) -> Dict[str, Any]:
-        # Actual HTTP call to ParagoN
-        import requests
-        response = requests.get(f"https://api.paragon.io/users/{user_id}")
-        return response.json()
-
-
-class CachingProxy(ClientInterface):
-    """Proxy: add caching layer."""
-    
-    def __init__(self, client: ClientInterface, ttl_seconds: int = 300):
+```python
+class ParagoNClientProxy:
+    def __init__(self, client: ParagoNClient, cache_ttl: int = 60,
+                 rate_limit: int = 10, breaker_threshold: int = 5):
         self.client = client
-        self.cache: Dict[str, tuple] = {}  # (value, expires_at)
-        self.ttl = ttl_seconds
-    
-    def fetch_user(self, user_id: str) -> Dict[str, Any]:
-        # Check cache
-        if user_id in self.cache:
-            value, expires_at = self.cache[user_id]
-            if datetime.now() < expires_at:
-                return value  # Return cached value
-            else:
-                del self.cache[user_id]  # Expired
-        
-        # Fetch from real client
-        user = self.client.fetch_user(user_id)
-        
-        # Cache result
-        self.cache[user_id] = (user, datetime.now() + timedelta(seconds=self.ttl))
-        
-        return user
-
-
-class RateLimitingProxy(ClientInterface):
-    """Proxy: add rate limiting."""
-    
-    def __init__(self, client: ClientInterface, max_requests: int = 100, window_seconds: int = 60):
-        self.client = client
-        self.max_requests = max_requests
-        self.window = window_seconds
-        self.requests = []  # Timestamps of requests
-    
-    def fetch_user(self, user_id: str) -> Dict[str, Any]:
-        now = time.time()
-        
-        # Remove old requests outside window
-        self.requests = [ts for ts in self.requests if now - ts < self.window]
-        
-        if len(self.requests) >= self.max_requests:
-            raise Exception(f"Rate limit exceeded: {self.max_requests} requests per {self.window}s")
-        
-        # Record this request
-        self.requests.append(now)
-        
-        # Call real client
-        return self.client.fetch_user(user_id)
-
-
-class CircuitBreaker:
-    """Simple circuit breaker."""
-    
-    def __init__(self, failure_threshold: int = 5, timeout_seconds: int = 60):
-        self.failure_threshold = failure_threshold
-        self.timeout = timeout_seconds
-        self.failures = 0
+        self.cache = {}
+        self.cache_ttl = cache_ttl
+        self.rate_limit = rate_limit
+        self.breaker_threshold = breaker_threshold
+        self.failure_count = 0
         self.last_failure_time = None
-        self.state = "closed"  # closed, open, half-open
-    
-    def record_success(self):
-        self.failures = 0
-        self.state = "closed"
-    
-    def record_failure(self):
-        self.failures += 1
-        self.last_failure_time = time.time()
-        if self.failures >= self.failure_threshold:
-            self.state = "open"
-    
-    def is_open(self) -> bool:
-        if self.state == "closed":
-            return False
-        
-        # Check if timeout expired
-        if time.time() - self.last_failure_time > self.timeout:
-            self.state = "half-open"
-            self.failures = 0
-            return False
-        
-        return self.state == "open"
-
-
-class CircuitBreakerProxy(ClientInterface):
-    """Proxy: add circuit breaker."""
-    
-    def __init__(self, client: ClientInterface, breaker: CircuitBreaker):
-        self.client = client
-        self.breaker = breaker
-    
-    def fetch_user(self, user_id: str) -> Dict[str, Any]:
-        if self.breaker.is_open():
-            raise Exception("Circuit breaker open: ParagoN service unavailable")
-        
-        try:
-            user = self.client.fetch_user(user_id)
-            self.breaker.record_success()
-            return user
-        except Exception as e:
-            self.breaker.record_failure()
-            raise
 ```
 
-## Composing Proxies
+* `client` → the real API client being wrapped
+* `cache` → stores cached responses keyed by user ID
+* `cache_ttl` → cache expiration time in seconds
+* `rate_limit` → max number of concurrent requests in the cache
+* `breaker_threshold` → number of failures before opening the circuit
+
+---
+
+### Caching Logic
 
 ```python
-# Build layered proxy stack
-real_client = ParagoNClient()
-
-# Add rate limiting first
-rate_limited = RateLimitingProxy(real_client, max_requests=100)
-
-# Add circuit breaker
-breaker = CircuitBreaker(failure_threshold=5)
-protected = CircuitBreakerProxy(rate_limited, breaker)
-
-# Add caching last (cache failures too? Or only successes?)
-cached = CachingProxy(protected, ttl_seconds=300)
-
-# Use the fully proxied client
-user = cached.fetch_user("user_123")
-# → Caching + Circuit Breaker + Rate Limiting applied!
+if user_id in self.cache:
+    cached_entry = self.cache[user_id]
+    if current_time - cached_entry['timestamp'] < self.cache_ttl:
+        print(f"Returning cached data for user {user_id}")
+        return cached_entry['data']
 ```
 
-## Configuration-Based Proxy Selection
+* Reduces repeated API calls for the same user
+* TTL ensures cache freshness
+
+---
+
+### Rate-Limiting Logic
 
 ```python
-def create_proxied_client(config: Dict[str, Any]) -> ClientInterface:
-    """Factory for creating proxied clients."""
-    client = ParagoNClient()
-    
-    if config.get("enable_rate_limiting"):
-        client = RateLimitingProxy(
-            client,
-            max_requests=config.get("max_requests", 100),
-            window_seconds=config.get("rate_limit_window", 60)
-        )
-    
-    if config.get("enable_circuit_breaker"):
-        breaker = CircuitBreaker(
-            failure_threshold=config.get("failure_threshold", 5),
-            timeout_seconds=config.get("breaker_timeout", 60)
-        )
-        client = CircuitBreakerProxy(client, breaker)
-    
-    if config.get("enable_caching"):
-        client = CachingProxy(
-            client,
-            ttl_seconds=config.get("cache_ttl", 300)
-        )
-    
-    return client
-
-# Production: full stack
-prod_client = create_proxied_client({
-    "enable_rate_limiting": True,
-    "max_requests": 1000,
-    "enable_circuit_breaker": True,
-    "enable_caching": True,
-    "cache_ttl": 600,
-})
-
-# Testing: only caching
-test_client = create_proxied_client({
-    "enable_caching": True,
-    "cache_ttl": 10,
-})
+if len(self.cache) >= self.rate_limit:
+    raise Exception("Rate limit exceeded. Try again later.")
 ```
 
-## Advantages
+* Simple policy based on number of cached entries
+* Prevents excessive load on the API
 
-| Pros | Cons |
-|------|------|
-| Transparent to callers | Order of proxies matters |
-| Clean separation of concerns | Performance overhead per layer |
-| Easy to enable/disable features | Can become hard to debug |
-| Highly composable | Complex stack can be confusing |
-| Policies configured externally | |
+---
 
-## Testing
+### Circuit Breaker Logic
 
 ```python
-def test_caching_proxy():
-    mock_client = MockParagoNClient()
-    proxy = CachingProxy(mock_client, ttl_seconds=10)
-    
-    # First call
-    user1 = proxy.fetch_user("user_123")
-    assert mock_client.call_count == 1
-    
-    # Second call (cached)
-    user2 = proxy.fetch_user("user_123")
-    assert mock_client.call_count == 1  # Still 1!
-    assert user1 == user2
+if self.failure_count >= self.breaker_threshold:
+    if current_time - self.last_failure_time < 60:  # cooldown
+        raise Exception("Circuit breaker is open. Request blocked.")
+    else:
+        self.failure_count = 0  # reset after cooldown
 ```
+
+* Stops requests when failures exceed threshold
+* Allows recovery after a cooldown period
+
+---
+
+### Unified Proxy API
+
+```python
+def get_user(self, user_id: str) -> dict:
+    # Implements caching, rate-limiting, and circuit breaker
+    ...
+    
+def update_user(self, user_id: str, data: dict) -> bool:
+    # Implements circuit breaker and invalidates cache on update
+    ...
+```
+
+* Methods **mirror the real client API**
+* Transparent for callers
+
+---
+
+## Usage Example
+
+```python
+client = ParagoNClient()
+proxy = ParagoNClientProxy(client, cache_ttl=60, rate_limit=10, breaker_threshold=5)
+
+user = proxy.get_user("user123")  # Fetches from API
+user_cached = proxy.get_user("user123")  # Returns cached
+proxy.update_user("user123", {"plan": "pro"})  # Invalidates cache
+```
+
+---
+
+## Testing Example (Fast Circuit Breaker)
+
+```python
+# Test caching, rate-limiting, and circuit breaker without real waits
+test_proxy_fast_circuit_breaker()
+```
+
+* Uses **cache TTL of 2s** and **breaker threshold of 2**
+* Simulates circuit breaker cooldown by **fast-forwarding last_failure_time**
+* Tests **all proxy behaviors deterministically**
+
+---
+
+## Benefits
+
+| Pros                                | Cons                              |
+| ----------------------------------- | --------------------------------- |
+| Transparent API proxy               | Adds some overhead per call       |
+| Reduces redundant network requests  | Simple rate-limiting logic only   |
+| Protects against cascading failures | Circuit breaker cooldown is fixed |
+| Centralizes policy enforcement      | Not suitable for complex policies |
+
+---
+
+## Advanced Extensions
+
+* Configurable **cache backends** (Redis, memcached)
+* Pluggable **rate-limiting policies** (token bucket, leaky bucket)
+* **Metrics collection** (success/failure counts, cache hits/misses)
+* Async-friendly implementation using `asyncio`
+* Dynamic **circuit breaker policies** per endpoint
+
+---
+
+## When to Use Proxy
+
+✅ Use when:
+
+* You want to add cross-cutting concerns like caching, throttling, or fault-tolerance
+* You want **transparent client swapping** without changing callers
+* You need centralized handling of third-party API calls
+
+❌ Avoid when:
+
+* No additional behavior is required beyond the client
+* Overhead of proxy outweighs benefits for low-traffic services
