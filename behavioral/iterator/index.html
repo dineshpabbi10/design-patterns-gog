@@ -13,10 +13,8 @@
       
       
       
-        <link rel="prev" href="../strategy/">
+        <link rel="prev" href="../observer/">
       
-      
-        <link rel="next" href="../iterator/">
       
       
         
@@ -27,7 +25,7 @@
     
     
       
-        <title>Observer - Gang of Four Design Patterns</title>
+        <title>Iterator - Gang of Four Design Patterns</title>
       
     
     
@@ -78,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#observer-pattern" class="md-skip">
+        <a href="#iterator-pattern" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Observer
+              Iterator
             
           </span>
         </div>
@@ -993,6 +991,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../observer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Observer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -1012,7 +1038,7 @@
   <span class="md-ellipsis">
     
   
-    Observer
+    Iterator
   
 
     
@@ -1030,7 +1056,7 @@
   <span class="md-ellipsis">
     
   
-    Observer
+    Iterator
   
 
     
@@ -1097,34 +1123,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../iterator/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Iterator
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1152,105 +1150,146 @@
   
 
 
-<h1 id="observer-pattern">Observer Pattern</h1>
+<h1 id="iterator-pattern">Iterator Pattern</h1>
 <h2 id="problem">Problem</h2>
-<p>Build an <code>Observer</code>-style event system so backend services can notify interested frontends (React) and other services about state changes (e.g., customer status updates, pipeline job progress). Observers should be able to subscribe/unsubscribe dynamically and receive typed notifications.</p>
+<p>Third-party APIs return paginated results. Build an <code>Iterator</code> abstraction that yields domain objects across pages transparently and integrates with your async and sync callers (both backend and ingestion workers).</p>
 <p>Constraints &amp; hints:
-- Support multiple transports (websocket for React, message bus for services).
-- Ensure subscribers receive delivered events at-least-once or exactly-once based on configuration.
-- Consider backpressure and slow consumer handling.</p>
-<p>Deliverable: design the observer registration API and an example notification flow for UI updates.</p>
+- Support backpressure for streaming consumers.
+- Provide adapters for both sync and async iteration.
+- Handle rate limits and transient errors while paginating.</p>
+<p>Deliverable: define an iterator interface and examples for iterating over a paginated ParagoN endpoint.</p>
 <h2 id="solution">Solution</h2>
-<p>Define an abstract <code>Observer</code> class with an <code>update</code> method, and an abstract <code>Subject</code> class with methods for registering, unregistering, and notifying observers. Implement concrete subjects and observers for different transports like WebSocket and Message Bus.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">ABC</span>
+<p>Define an iterator that handles pagination transparently, providing both synchronous and asynchronous implementations. The iterator buffers results from pages and yields them one by one, fetching new pages as needed.</p>
+<div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Problem: Third-party APIs return paginated results. Build an `Iterator` abstraction that yields domain objects across</span>
+<span class="sd">pages transparently and integrates with your async and sync callers (both backend and ingestion workers).</span>
 
-<span class="n">WebSocketType</span> <span class="o">=</span> <span class="nb">str</span>  <span class="c1"># Placeholder for actual WebSocket type</span>
-<span class="n">MessageBusType</span> <span class="o">=</span> <span class="nb">str</span>  <span class="c1"># Placeholder for actual Message Bus type</span>
+<span class="sd">Constraints &amp; hints:</span>
+<span class="sd">- Support backpressure for streaming consumers.</span>
+<span class="sd">- Provide adapters for both sync and async iteration.</span>
+<span class="sd">- Handle rate limits and transient errors while paginating.</span>
 
-
-<span class="k">class</span><span class="w"> </span><span class="nc">Observer</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Receive update from subject.&quot;&quot;&quot;</span>
-        <span class="k">pass</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">Subject</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">register_observer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observer</span><span class="p">:</span> <span class="n">Observer</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Register an observer to receive updates.&quot;&quot;&quot;</span>
-        <span class="k">pass</span>
-
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">unregister_observer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observer</span><span class="p">:</span> <span class="n">Observer</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Unregister an observer from receiving updates.&quot;&quot;&quot;</span>
-        <span class="k">pass</span>
-
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">notify_observers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Notify all registered observers about an event.&quot;&quot;&quot;</span>
-        <span class="k">pass</span>
+<span class="sd">Deliverable: define an iterator interface and examples for iterating over a paginated ParagoN endpoint.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">EventSubject</span><span class="p">(</span><span class="n">Subject</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_observers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">register_observer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observer</span><span class="p">:</span> <span class="n">Observer</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_observers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">observer</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">unregister_observer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observer</span><span class="p">:</span> <span class="n">Observer</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_observers</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">observer</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">notify_observers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">observer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observers</span><span class="p">:</span>
-            <span class="n">observer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SyncCaller</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_page</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">page_token</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Simulate fetching a page of results from a paginated API</span>
+        <span class="k">if</span> <span class="n">page_token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="s2">&quot;next_page_token&quot;</span><span class="p">:</span> <span class="s2">&quot;token1&quot;</span><span class="p">}</span>
+        <span class="k">elif</span> <span class="n">page_token</span> <span class="o">==</span> <span class="s2">&quot;token1&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="s2">&quot;next_page_token&quot;</span><span class="p">:</span> <span class="s2">&quot;token2&quot;</span><span class="p">}</span>
+        <span class="k">elif</span> <span class="n">page_token</span> <span class="o">==</span> <span class="s2">&quot;token2&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="s2">&quot;next_page_token&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;next_page_token&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">ReactObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">websocket</span><span class="p">:</span> <span class="n">WebSocketType</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">websocket</span> <span class="o">=</span> <span class="n">websocket</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;ReactObserver received event &#39;</span><span class="si">{</span><span class="n">event</span><span class="si">}</span><span class="s2">&#39; with data: </span><span class="si">{</span><span class="n">data</span><span class="si">}</span><span class="s2"> with websocket </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">websocket</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">MessageBusObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message_bus</span><span class="p">:</span> <span class="n">MessageBusType</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">message_bus</span> <span class="o">=</span> <span class="n">message_bus</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;MessageBusObserver received event &#39;</span><span class="si">{</span><span class="n">event</span><span class="si">}</span><span class="s2">&#39; with data: </span><span class="si">{</span><span class="n">data</span><span class="si">}</span><span class="s2"> with message bus </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">message_bus</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AsyncCaller</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch_page</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">page_token</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Simulate fetching a page of results from a paginated API</span>
+        <span class="k">if</span> <span class="n">page_token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="s2">&quot;next_page_token&quot;</span><span class="p">:</span> <span class="s2">&quot;token1&quot;</span><span class="p">}</span>
+        <span class="k">elif</span> <span class="n">page_token</span> <span class="o">==</span> <span class="s2">&quot;token1&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="s2">&quot;next_page_token&quot;</span><span class="p">:</span> <span class="s2">&quot;token2&quot;</span><span class="p">}</span>
+        <span class="k">elif</span> <span class="n">page_token</span> <span class="o">==</span> <span class="s2">&quot;token2&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="s2">&quot;next_page_token&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;next_page_token&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
 
 
-<span class="c1"># Example usage</span>
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="n">subject</span> <span class="o">=</span> <span class="n">EventSubject</span><span class="p">()</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PaginatedIterator</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">caller</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">caller</span> <span class="o">=</span> <span class="n">caller</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">page_token</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finished</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="n">react_observer</span> <span class="o">=</span> <span class="n">ReactObserver</span><span class="p">(</span><span class="n">websocket</span><span class="o">=</span><span class="s2">&quot;WebSocketConnection1&quot;</span><span class="p">)</span>
-    <span class="n">message_bus_observer</span> <span class="o">=</span> <span class="n">MessageBusObserver</span><span class="p">(</span><span class="n">message_bus</span><span class="o">=</span><span class="s2">&quot;MessageBusConnection1&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
 
-    <span class="n">subject</span><span class="o">.</span><span class="n">register_observer</span><span class="p">(</span><span class="n">react_observer</span><span class="p">)</span>
-    <span class="n">subject</span><span class="o">.</span><span class="n">register_observer</span><span class="p">(</span><span class="n">message_bus_observer</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">finished</span><span class="p">:</span>
+            <span class="n">page</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">caller</span><span class="o">.</span><span class="n">fetch_page</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">page_token</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">page</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">page_token</span> <span class="o">=</span> <span class="n">page</span><span class="p">[</span><span class="s2">&quot;next_page_token&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">page_token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">finished</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">StopIteration</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-    <span class="c1"># Notify observers about a customer status update</span>
-    <span class="n">subject</span><span class="o">.</span><span class="n">notify_observers</span><span class="p">(</span>
-        <span class="n">event</span><span class="o">=</span><span class="s2">&quot;customer_status_update&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;customer_id&quot;</span><span class="p">:</span> <span class="mi">123</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;active&quot;</span><span class="p">}</span>
-    <span class="p">)</span>
 
-    <span class="c1"># Unregister the React observer and notify again</span>
-    <span class="n">subject</span><span class="o">.</span><span class="n">unregister_observer</span><span class="p">(</span><span class="n">react_observer</span><span class="p">)</span>
-    <span class="n">subject</span><span class="o">.</span><span class="n">notify_observers</span><span class="p">(</span>
-        <span class="n">event</span><span class="o">=</span><span class="s2">&quot;pipeline_job_progress&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;job_id&quot;</span><span class="p">:</span> <span class="mi">456</span><span class="p">,</span> <span class="s2">&quot;progress&quot;</span><span class="p">:</span> <span class="s2">&quot;50%&quot;</span><span class="p">}</span>
-    <span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AsyncPaginatedIterator</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">caller</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">caller</span> <span class="o">=</span> <span class="n">caller</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">page_token</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finished</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__aiter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="fm">__anext__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">finished</span><span class="p">:</span>
+            <span class="n">page</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">caller</span><span class="o">.</span><span class="n">fetch_page</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">page_token</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">page</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">page_token</span> <span class="o">=</span> <span class="n">page</span><span class="p">[</span><span class="s2">&quot;next_page_token&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">page_token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">finished</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">StopAsyncIteration</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="c1"># Example usage for sync iterator</span>
+<span class="n">sync_caller</span> <span class="o">=</span> <span class="n">SyncCaller</span><span class="p">()</span>
+<span class="n">sync_iterator</span> <span class="o">=</span> <span class="n">PaginatedIterator</span><span class="p">(</span><span class="n">sync_caller</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sync_iterator</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sync item: </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Example usage for async iterator</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">async_main</span><span class="p">():</span>
+    <span class="n">async_caller</span> <span class="o">=</span> <span class="n">AsyncCaller</span><span class="p">()</span>
+    <span class="n">async_iterator</span> <span class="o">=</span> <span class="n">AsyncPaginatedIterator</span><span class="p">(</span><span class="n">async_caller</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">async_iterator</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Async item: </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">async_main</span><span class="p">())</span>
+
+<span class="c1"># Unit tests with pytest</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_sync_iterator</span><span class="p">():</span>
+    <span class="n">sync_caller</span> <span class="o">=</span> <span class="n">SyncCaller</span><span class="p">()</span>
+    <span class="n">sync_iterator</span> <span class="o">=</span> <span class="n">PaginatedIterator</span><span class="p">(</span><span class="n">sync_caller</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sync_iterator</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">results</span> <span class="o">==</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>
+
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">asyncio</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_async_iterator</span><span class="p">():</span>
+    <span class="n">async_caller</span> <span class="o">=</span> <span class="n">AsyncCaller</span><span class="p">()</span>
+    <span class="n">async_iterator</span> <span class="o">=</span> <span class="n">AsyncPaginatedIterator</span><span class="p">(</span><span class="n">async_caller</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">async</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">async_iterator</span><span class="p">:</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">results</span> <span class="o">==</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>
 </code></pre></div>
 <h2 id="when-to-use">When to Use</h2>
-<p>Use the Observer pattern when you need to notify multiple objects about changes in the state of another object, especially when the number of observers is dynamic and can change at runtime. It's particularly useful in event-driven systems, GUI frameworks, and distributed systems where components need to react to state changes without tight coupling.</content>
-<parameter name="filePath">/workspaces/design-patterns-gog/docs/behavioral/observer.md</p>
+<p>Use the Iterator pattern when you need to traverse collections or data sources that are paginated or have complex access patterns. It's particularly useful for:
+- Paginated API results
+- Large datasets that can't fit in memory
+- Streaming data sources
+- Providing a uniform interface for different data access methods (sync/async)
+- Implementing custom collection classes that need to support iteration</content>
+<parameter name="filePath">/workspaces/design-patterns-gog/docs/behavioral/iterator.md</p>
 
 
 
