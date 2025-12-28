@@ -56,3 +56,4 @@ nav:
     - Overview: behavioral/index.md
     - Strategy: behavioral/strategy.md
     - Observer: behavioral/observer.md
+    - Iterator: behavioral/iterator.md

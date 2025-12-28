@@ -1,3 +1,21 @@
+# Iterator Pattern
+
+## Problem
+
+Third-party APIs return paginated results. Build an `Iterator` abstraction that yields domain objects across pages transparently and integrates with your async and sync callers (both backend and ingestion workers).
+
+Constraints & hints:
+- Support backpressure for streaming consumers.
+- Provide adapters for both sync and async iteration.
+- Handle rate limits and transient errors while paginating.
+
+Deliverable: define an iterator interface and examples for iterating over a paginated ParagoN endpoint.
+
+## Solution
+
+Define an iterator that handles pagination transparently, providing both synchronous and asynchronous implementations. The iterator buffers results from pages and yields them one by one, fetching new pages as needed.
+
+```python
 """
 Problem: Third-party APIs return paginated results. Build an `Iterator` abstraction that yields domain objects across
 pages transparently and integrates with your async and sync callers (both backend and ingestion workers).
@@ -119,3 +137,14 @@ async def test_async_iterator():
     async for item in async_iterator:
         results.append(item)
     assert results == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+```
+
+## When to Use
+
+Use the Iterator pattern when you need to traverse collections or data sources that are paginated or have complex access patterns. It's particularly useful for:
+- Paginated API results
+- Large datasets that can't fit in memory
+- Streaming data sources
+- Providing a uniform interface for different data access methods (sync/async)
+- Implementing custom collection classes that need to support iteration</content>
+<parameter name="filePath">/workspaces/design-patterns-gog/docs/behavioral/iterator.md
