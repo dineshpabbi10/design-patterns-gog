@@ -13,10 +13,6 @@
       
       
       
-        <link rel="prev" href="../flyweight/">
-      
-      
-        <link rel="next" href="../../behavioral/">
       
       
         
@@ -27,7 +23,7 @@
     
     
       
-        <title>Proxy - Gang of Four Design Patterns</title>
+        <title>Strategy Pattern - Gang of Four Design Patterns</title>
       
     
     
@@ -78,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#proxy-pattern-http-api-client-with-caching-rate-limiting-and-circuit-breaker" class="md-skip">
+        <a href="#strategy-pattern" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Proxy
+              Strategy Pattern
             
           </span>
         </div>
@@ -244,13 +240,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../structural/" class="md-tabs__link">
           
   
   
@@ -270,7 +264,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../behavioral/" class="md-tabs__link">
+        <a href="../" class="md-tabs__link">
           
   
   
@@ -595,31 +589,28 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -637,7 +628,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -655,7 +646,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../" class="md-nav__link">
+      <a href="../../structural/" class="md-nav__link">
         
   
   
@@ -683,7 +674,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adapter/" class="md-nav__link">
+      <a href="../../structural/adapter/" class="md-nav__link">
         
   
   
@@ -711,7 +702,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../bridge/" class="md-nav__link">
+      <a href="../../structural/bridge/" class="md-nav__link">
         
   
   
@@ -739,7 +730,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../composite/" class="md-nav__link">
+      <a href="../../structural/composite/" class="md-nav__link">
         
   
   
@@ -767,7 +758,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../decorator/" class="md-nav__link">
+      <a href="../../structural/decorator/" class="md-nav__link">
         
   
   
@@ -795,7 +786,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../facade/" class="md-nav__link">
+      <a href="../../structural/facade/" class="md-nav__link">
         
   
   
@@ -823,7 +814,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../flyweight/" class="md-nav__link">
+      <a href="../../structural/flyweight/" class="md-nav__link">
         
   
   
@@ -848,37 +839,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Proxy
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../structural/proxy/" class="md-nav__link">
         
   
   
@@ -894,192 +858,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#problem" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Problem
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Problem">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#without-proxy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Without Proxy
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#solution" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Solution
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#core-design" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Core Design
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Core Design">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#proxy-class" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Proxy Class
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#caching-logic" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Caching Logic
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rate-limiting-logic" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Rate-Limiting Logic
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#circuit-breaker-logic" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Circuit Breaker Logic
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#unified-proxy-api" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Unified Proxy API
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#usage-example" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Usage Example
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#testing-example-fast-circuit-breaker" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Testing Example (Fast Circuit Breaker)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#benefits" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Benefits
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#advanced-extensions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Advanced Extensions
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#when-to-use-proxy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        When to Use Proxy
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1153,7 +931,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../behavioral/" class="md-nav__link">
+      <a href="../" class="md-nav__link">
         
   
   
@@ -1201,134 +979,83 @@
   
 
 
-<h1 id="proxy-pattern-http-api-client-with-caching-rate-limiting-and-circuit-breaker">Proxy Pattern: HTTP API Client with Caching, Rate-Limiting, and Circuit Breaker</h1>
+<h1 id="strategy-pattern">Strategy Pattern</h1>
 <h2 id="problem">Problem</h2>
-<p>Your <strong>HTTP API client</strong> (<code>ParagoNClient</code>) is used in edge services and frontends to fetch and update user data:</p>
-<ul>
-<li>Repeated API calls for the same user lead to <strong>redundant network requests</strong></li>
-<li>High request rates can exceed <strong>third-party API limits</strong></li>
-<li>Transient API failures may propagate to clients, causing downtime</li>
-<li>Managing caching, rate-limits, and circuit-breaking separately makes code <strong>complex and scattered</strong></li>
-</ul>
-<h3 id="without-proxy">Without Proxy</h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># ❌ Direct client calls without policies</span>
-<span class="n">user</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="s2">&quot;user123&quot;</span><span class="p">)</span>
-<span class="n">client</span><span class="o">.</span><span class="n">update_user</span><span class="p">(</span><span class="s2">&quot;user123&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;plan&quot;</span><span class="p">:</span> <span class="s2">&quot;pro&quot;</span><span class="p">})</span>
-</code></pre></div>
-<p><strong>Problems:</strong></p>
-<ul>
-<li>No caching → repeated fetches always hit the API</li>
-<li>No rate-limiting → risk of hitting API quotas</li>
-<li>No circuit breaker → failures propagate to callers</li>
-<li>Hard to add new policies without modifying client</li>
-</ul>
-<hr />
+<p>Your clients must support different retry and backoff strategies depending on the endpoint (idempotent vs non-idempotent) and environment (dev vs prod). Implement a <code>Strategy</code> abstraction for pluggable retry/backoff and serialization strategies used across clients and pipeline connectors.</p>
 <h2 id="solution">Solution</h2>
-<p>Use the <strong>Proxy Pattern</strong> to <strong>wrap the original client</strong> and provide <strong>additional behaviors transparently</strong>:</p>
-<ul>
-<li><strong>Caching</strong> → store recent API responses to reduce repeated network calls</li>
-<li><strong>Rate-limiting</strong> → prevent excessive API requests</li>
-<li><strong>Circuit breaker</strong> → stop requests when failures exceed a threshold and allow recovery after cooldown</li>
-<li><strong>Transparent interface</strong> → same method signatures as <code>ParagoNClient</code>, so callers can swap easily</li>
-</ul>
-<p>This allows:</p>
-<ul>
-<li>Centralized policy enforcement</li>
-<li>Reduced API calls and latency</li>
-<li>Safe handling of transient failures</li>
-<li>Simplified client usage for frontends</li>
-</ul>
-<hr />
-<h2 id="core-design">Core Design</h2>
+<p>Define an abstract <code>RetryStrategy</code> class with a <code>get_delay</code> method, then implement concrete strategies like <code>FixedIntervalStrategy</code> and <code>ExponentialBackoffWithJitterStrategy</code>. Integrate into a client class like <code>HttpClient</code> for automatic retries.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
-</code></pre></div>
-<h3 id="proxy-class">Proxy Class</h3>
-<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ParagoNClientProxy</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">ParagoNClient</span><span class="p">,</span> <span class="n">cache_ttl</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60</span><span class="p">,</span>
-                 <span class="n">rate_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">breaker_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">client</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cache_ttl</span> <span class="o">=</span> <span class="n">cache_ttl</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">rate_limit</span> <span class="o">=</span> <span class="n">rate_limit</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">breaker_threshold</span> <span class="o">=</span> <span class="n">breaker_threshold</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">failure_count</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">last_failure_time</span> <span class="o">=</span> <span class="kc">None</span>
-</code></pre></div>
-<ul>
-<li><code>client</code> → the real API client being wrapped</li>
-<li><code>cache</code> → stores cached responses keyed by user ID</li>
-<li><code>cache_ttl</code> → cache expiration time in seconds</li>
-<li><code>rate_limit</code> → max number of concurrent requests in the cache</li>
-<li><code>breaker_threshold</code> → number of failures before opening the circuit</li>
-</ul>
-<hr />
-<h3 id="caching-logic">Caching Logic</h3>
-<div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">:</span>
-    <span class="n">cached_entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">[</span><span class="n">user_id</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">current_time</span> <span class="o">-</span> <span class="n">cached_entry</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_ttl</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Returning cached data for user </span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">cached_entry</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span>
-</code></pre></div>
-<ul>
-<li>Reduces repeated API calls for the same user</li>
-<li>TTL ensures cache freshness</li>
-</ul>
-<hr />
-<h3 id="rate-limiting-logic">Rate-Limiting Logic</h3>
-<div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rate_limit</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Rate limit exceeded. Try again later.&quot;</span><span class="p">)</span>
-</code></pre></div>
-<ul>
-<li>Simple policy based on number of cached entries</li>
-<li>Prevents excessive load on the API</li>
-</ul>
-<hr />
-<h3 id="circuit-breaker-logic">Circuit Breaker Logic</h3>
-<div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">failure_count</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">breaker_threshold</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">current_time</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_failure_time</span> <span class="o">&lt;</span> <span class="mi">60</span><span class="p">:</span>  <span class="c1"># cooldown</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Circuit breaker is open. Request blocked.&quot;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">failure_count</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># reset after cooldown</span>
-</code></pre></div>
-<ul>
-<li>Stops requests when failures exceed threshold</li>
-<li>Allows recovery after a cooldown period</li>
-</ul>
-<hr />
-<h3 id="unified-proxy-api">Unified Proxy API</h3>
-<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-    <span class="c1"># Implements caching, rate-limiting, and circuit breaker</span>
-    <span class="o">...</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">update_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="c1"># Implements circuit breaker and invalidates cache on update</span>
-    <span class="o">...</span>
-</code></pre></div>
-<ul>
-<li>Methods <strong>mirror the real client API</strong></li>
-<li>Transparent for callers</li>
-</ul>
-<hr />
-<h2 id="usage-example">Usage Example</h2>
-<div class="highlight"><pre><span></span><code><span class="n">client</span> <span class="o">=</span> <span class="n">ParagoNClient</span><span class="p">()</span>
-<span class="n">proxy</span> <span class="o">=</span> <span class="n">ParagoNClientProxy</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">cache_ttl</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">rate_limit</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">breaker_threshold</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RetryStrategy</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_delay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attempt</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the delay before the next retry based on the attempt number.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
 
-<span class="n">user</span> <span class="o">=</span> <span class="n">proxy</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="s2">&quot;user123&quot;</span><span class="p">)</span>  <span class="c1"># Fetches from API</span>
-<span class="n">user_cached</span> <span class="o">=</span> <span class="n">proxy</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="s2">&quot;user123&quot;</span><span class="p">)</span>  <span class="c1"># Returns cached</span>
-<span class="n">proxy</span><span class="o">.</span><span class="n">update_user</span><span class="p">(</span><span class="s2">&quot;user123&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;plan&quot;</span><span class="p">:</span> <span class="s2">&quot;pro&quot;</span><span class="p">})</span>  <span class="c1"># Invalidates cache</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FixedIntervalStrategy</span><span class="p">(</span><span class="n">RetryStrategy</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interval</span> <span class="o">=</span> <span class="n">interval</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_delay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attempt</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interval</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ExponentialBackoffWithJitterStrategy</span><span class="p">(</span><span class="n">RetryStrategy</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_delay</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">max_delay</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_delay</span> <span class="o">=</span> <span class="n">base_delay</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_delay</span> <span class="o">=</span> <span class="n">max_delay</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_delay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attempt</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="n">exp_delay</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_delay</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">attempt</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_delay</span><span class="p">)</span>
+        <span class="n">jitter</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">exp_delay</span> <span class="o">*</span> <span class="mf">0.1</span><span class="p">)</span>  <span class="c1"># 10% jitter</span>
+        <span class="k">return</span> <span class="n">exp_delay</span> <span class="o">+</span> <span class="n">jitter</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">HttpClient</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">strategy</span><span class="p">:</span> <span class="n">RetryStrategy</span><span class="p">,</span> <span class="n">max_attempts</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span> <span class="o">=</span> <span class="n">strategy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_attempts</span> <span class="o">=</span> <span class="n">max_attempts</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">attempt</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">attempt</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_attempts</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Simulate an HTTP GET request (replace with actual request logic)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempt </span><span class="si">{</span><span class="n">attempt</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> to GET </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mf">0.7</span><span class="p">:</span>  <span class="c1"># Simulate a failure 70% of the time</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Simulated request failure&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Request succeeded&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="s2">&quot;Response data&quot;</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Request failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">attempt</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">attempt</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_attempts</span><span class="p">:</span>
+                    <span class="n">delay</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="o">.</span><span class="n">get_delay</span><span class="p">(</span><span class="n">attempt</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Retrying in </span><span class="si">{</span><span class="n">delay</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> seconds...&quot;</span><span class="p">)</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Max attempts reached. Giving up.&quot;</span><span class="p">)</span>
+                    <span class="k">raise</span>
 </code></pre></div>
-<hr />
-<h2 id="testing-example-fast-circuit-breaker">Testing Example (Fast Circuit Breaker)</h2>
-<div class="highlight"><pre><span></span><code><span class="c1"># Test caching, rate-limiting, and circuit breaker without real waits</span>
-<span class="n">test_proxy_fast_circuit_breaker</span><span class="p">()</span>
-</code></pre></div>
+<h2 id="key-features">Key Features</h2>
 <ul>
-<li>Uses <strong>cache TTL of 2s</strong> and <strong>breaker threshold of 2</strong></li>
-<li>Simulates circuit breaker cooldown by <strong>fast-forwarding last_failure_time</strong></li>
-<li>Tests <strong>all proxy behaviors deterministically</strong></li>
+<li><strong>Pluggable</strong>: Strategies can be swapped via configuration or runtime.</li>
+<li><strong>Composable</strong>: Strategies can be extended or combined (e.g., add jitter to exponential backoff).</li>
+<li><strong>Decoupled</strong>: Core client logic unchanged; reliability tuned via strategies.</li>
 </ul>
-<hr />
-<h2 id="benefits">Benefits</h2>
+<h2 id="usage-in-your-code">Usage in Your Code</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># Example usage</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">strategy</span> <span class="o">=</span> <span class="n">ExponentialBackoffWithJitterStrategy</span><span class="p">(</span><span class="n">base_delay</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">max_delay</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">HttpClient</span><span class="p">(</span><span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">,</span> <span class="n">max_attempts</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://api.example.com/data&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Received response: </span><span class="si">{</span><span class="n">response</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Final failure: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="advantages-disadvantages">Advantages &amp; Disadvantages</h2>
 <table>
 <thead>
 <tr>
@@ -1338,45 +1065,29 @@
 </thead>
 <tbody>
 <tr>
-<td>Transparent API proxy</td>
-<td>Adds some overhead per call</td>
+<td>Easy to swap strategies</td>
+<td>Requires careful design to avoid tight coupling</td>
 </tr>
 <tr>
-<td>Reduces redundant network requests</td>
-<td>Simple rate-limiting logic only</td>
+<td>Composable implementations</td>
+<td>Potential for strategy explosion if not managed</td>
 </tr>
 <tr>
-<td>Protects against cascading failures</td>
-<td>Circuit breaker cooldown is fixed</td>
-</tr>
-<tr>
-<td>Centralizes policy enforcement</td>
-<td>Not suitable for complex policies</td>
+<td>Improves reliability without changing core logic</td>
+<td>Adds abstraction overhead</td>
 </tr>
 </tbody>
 </table>
-<hr />
-<h2 id="advanced-extensions">Advanced Extensions</h2>
-<ul>
-<li>Configurable <strong>cache backends</strong> (Redis, memcached)</li>
-<li>Pluggable <strong>rate-limiting policies</strong> (token bucket, leaky bucket)</li>
-<li><strong>Metrics collection</strong> (success/failure counts, cache hits/misses)</li>
-<li>Async-friendly implementation using <code>asyncio</code></li>
-<li>Dynamic <strong>circuit breaker policies</strong> per endpoint</li>
-</ul>
-<hr />
-<h2 id="when-to-use-proxy">When to Use Proxy</h2>
-<p>✅ Use when:</p>
-<ul>
-<li>You want to add cross-cutting concerns like caching, throttling, or fault-tolerance</li>
-<li>You want <strong>transparent client swapping</strong> without changing callers</li>
-<li>You need centralized handling of third-party API calls</li>
-</ul>
-<p>❌ Avoid when:</p>
-<ul>
-<li>No additional behavior is required beyond the client</li>
-<li>Overhead of proxy outweighs benefits for low-traffic services</li>
-</ul>
+<h2 id="testing-tip">Testing Tip</h2>
+<p>Mock the strategy in unit tests to isolate client behavior.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">unittest.mock</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mock</span>
+
+<span class="c1"># Mock strategy for testing</span>
+<span class="n">mock_strategy</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">()</span>
+<span class="n">mock_strategy</span><span class="o">.</span><span class="n">get_delay</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">HttpClient</span><span class="p">(</span><span class="n">strategy</span><span class="o">=</span><span class="n">mock_strategy</span><span class="p">,</span> <span class="n">max_attempts</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="c1"># Test client logic without real delays</span>
+</code></pre></div>
 
 
 
