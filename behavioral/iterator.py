@@ -38,7 +38,7 @@ class AsyncCaller:
 
 
 class PaginatedIterator:
-    def __init__(self, caller : SyncCaller):
+    def __init__(self, caller: SyncCaller):
         self.caller = caller
         self.page_token = None
         self.buffer = []
@@ -60,7 +60,7 @@ class PaginatedIterator:
 
 
 class AsyncPaginatedIterator:
-    def __init__(self, caller : AsyncCaller):
+    def __init__(self, caller: AsyncCaller):
         self.caller = caller
         self.page_token = None
         self.buffer = []
