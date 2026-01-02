@@ -59,3 +59,4 @@ nav:
     - Iterator: behavioral/iterator.md
     - Template Method: behavioral/template_method.md
     - Mediator: behavioral/mediator.md
+    - Command: behavioral/command.md
