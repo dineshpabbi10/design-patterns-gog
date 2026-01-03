@@ -13,10 +13,8 @@
       
       
       
-        <link rel="prev" href="../strategy/">
+        <link rel="prev" href="../memento/">
       
-      
-        <link rel="next" href="../iterator/">
       
       
         
@@ -27,7 +25,7 @@
     
     
       
-        <title>Observer - Gang of Four Design Patterns</title>
+        <title>Visitor - Gang of Four Design Patterns</title>
       
     
     
@@ -78,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#observer-pattern" class="md-skip">
+        <a href="#visitor-pattern" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Observer
+              Visitor
             
           </span>
         </div>
@@ -993,37 +991,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Observer
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../observer/" class="md-nav__link">
         
   
   
@@ -1039,59 +1010,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#problem" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Problem
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#solution" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Solution
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#when-to-use" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        When to Use
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1269,10 +1187,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../visitor/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visitor
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1288,6 +1233,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Problem
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-to-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1320,105 +1318,184 @@
   
 
 
-<h1 id="observer-pattern">Observer Pattern</h1>
+<h1 id="visitor-pattern">Visitor Pattern</h1>
 <h2 id="problem">Problem</h2>
-<p>Build an <code>Observer</code>-style event system so backend services can notify interested frontends (React) and other services about state changes (e.g., customer status updates, pipeline job progress). Observers should be able to subscribe/unsubscribe dynamically and receive typed notifications.</p>
+<p>You need to perform different operations over a tree-like structure of configuration nodes (e.g., validation, metrics collection, migration). Implement a <code>Visitor</code> that can traverse config trees and run operations without modifying the tree classes.</p>
 <p>Constraints &amp; hints:
-- Support multiple transports (websocket for React, message bus for services).
-- Ensure subscribers receive delivered events at-least-once or exactly-once based on configuration.
-- Consider backpressure and slow consumer handling.</p>
-<p>Deliverable: design the observer registration API and an example notification flow for UI updates.</p>
+- Visitors should be easy to add for new operations.
+- Traversal should support pre/post-order hooks and short-circuiting.
+- Useful for decoupling operations from the data model.</p>
+<p>Deliverable: define the visitor interface and an example visitor for validating config versions.</p>
 <h2 id="solution">Solution</h2>
-<p>Define an abstract <code>Observer</code> class with an <code>update</code> method, and an abstract <code>Subject</code> class with methods for registering, unregistering, and notifying observers. Implement concrete subjects and observers for different transports like WebSocket and Message Bus.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">ABC</span>
+<p>Define an abstract <code>ConfigVisitor</code> class with <code>pre_hook</code>, <code>post_hook</code>, and <code>visit</code> methods, and a <code>traverse</code> method for tree traversal. Define an abstract <code>ConfigNode</code> class with an <code>accept</code> method. Implement concrete nodes and visitors.</p>
+<div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Problem: You need to perform different operations over a tree-like structure of configuration nodes (e.g., validation,</span>
+<span class="sd">metrics collection, migration). Implement a `Visitor` that can traverse config trees and run operations without</span>
+<span class="sd">modifying the tree classes.</span>
 
-<span class="n">WebSocketType</span> <span class="o">=</span> <span class="nb">str</span>  <span class="c1"># Placeholder for actual WebSocket type</span>
-<span class="n">MessageBusType</span> <span class="o">=</span> <span class="nb">str</span>  <span class="c1"># Placeholder for actual Message Bus type</span>
+<span class="sd">Constraints &amp; hints:</span>
+<span class="sd">- Visitors should be easy to add for new operations.</span>
+<span class="sd">- Traversal should support pre/post-order hooks and short-circuiting.</span>
+<span class="sd">- Useful for decoupling operations from the data model.</span>
+
+<span class="sd">Deliverable: define the visitor interface and an example visitor for validating config versions.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">Observer</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ConfigNode</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class for configuration nodes in a tree structure.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">children</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="s2">&quot;ConfigNode&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a ConfigNode with optional children.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">children</span>
+
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Receive update from subject.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">accept</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visitor</span><span class="p">:</span> <span class="s2">&quot;ConfigVisitor&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Accept a visitor to perform operations on this node.&quot;&quot;&quot;</span>
         <span class="k">pass</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">Subject</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ConcreteConfigNode</span><span class="p">(</span><span class="n">ConfigNode</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A concrete configuration node with a name and version.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">children</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="s2">&quot;ConfigNode&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">version</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">children</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">accept</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visitor</span><span class="p">:</span> <span class="s2">&quot;ConfigVisitor&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">visitor</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ConfigVisitor</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class for visitors that can operate on ConfigNode objects.&quot;&quot;&quot;</span>
+
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">register_observer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observer</span><span class="p">:</span> <span class="n">Observer</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Register an observer to receive updates.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pre_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pre-hook method called before visiting a node. Return True to continue traversal.&quot;&quot;&quot;</span>
         <span class="k">pass</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">unregister_observer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observer</span><span class="p">:</span> <span class="n">Observer</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Unregister an observer from receiving updates.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">post_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Post-hook method called after visiting a node and its children.&quot;&quot;&quot;</span>
         <span class="k">pass</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">notify_observers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Notify all registered observers about an event.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">ConfigNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Visit a specific node and perform operations on it.&quot;&quot;&quot;</span>
         <span class="k">pass</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">traverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">ConfigNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Traverse the tree starting from the given node, calling hooks and visit.&quot;&quot;&quot;</span>
+        <span class="c1"># Pre hook for short circuiting the traversal</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_hook</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
-<span class="k">class</span><span class="w"> </span><span class="nc">EventSubject</span><span class="p">(</span><span class="n">Subject</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_observers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">register_observer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observer</span><span class="p">:</span> <span class="n">Observer</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_observers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">observer</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">unregister_observer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observer</span><span class="p">:</span> <span class="n">Observer</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_observers</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">observer</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">notify_observers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">observer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observers</span><span class="p">:</span>
-            <span class="n">observer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">post_hook</span><span class="p">()</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">ReactObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">websocket</span><span class="p">:</span> <span class="n">WebSocketType</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">websocket</span> <span class="o">=</span> <span class="n">websocket</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">VersionValidationVisitor</span><span class="p">(</span><span class="n">ConfigVisitor</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Visitor that validates the version of all ConfigNode objects in a tree.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;ReactObserver received event &#39;</span><span class="si">{</span><span class="n">event</span><span class="si">}</span><span class="s2">&#39; with data: </span><span class="si">{</span><span class="n">data</span><span class="si">}</span><span class="s2"> with websocket </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">websocket</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">version_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the visitor with the expected version ID.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version_id</span> <span class="o">=</span> <span class="n">version_id</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">pre_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pre-hook to check if traversal should continue. Returns True if valid so far.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">post_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Post-hook called after traversal. No operation needed.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">ConfigNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Visit a node and validate its version if it&#39;s a ConcreteConfigNode.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ConcreteConfigNode</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">version</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">version_id</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Version mismatch found&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Unknown node type encountered during validation.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span> <span class="o">=</span> <span class="kc">False</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">MessageBusObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message_bus</span><span class="p">:</span> <span class="n">MessageBusType</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">message_bus</span> <span class="o">=</span> <span class="n">message_bus</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;MessageBusObserver received event &#39;</span><span class="si">{</span><span class="n">event</span><span class="si">}</span><span class="s2">&#39; with data: </span><span class="si">{</span><span class="n">data</span><span class="si">}</span><span class="s2"> with message bus </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">message_bus</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
-
-
-<span class="c1"># Example usage</span>
+<span class="c1"># Example usage:</span>
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="n">subject</span> <span class="o">=</span> <span class="n">EventSubject</span><span class="p">()</span>
-
-    <span class="n">react_observer</span> <span class="o">=</span> <span class="n">ReactObserver</span><span class="p">(</span><span class="n">websocket</span><span class="o">=</span><span class="s2">&quot;WebSocketConnection1&quot;</span><span class="p">)</span>
-    <span class="n">message_bus_observer</span> <span class="o">=</span> <span class="n">MessageBusObserver</span><span class="p">(</span><span class="n">message_bus</span><span class="o">=</span><span class="s2">&quot;MessageBusConnection1&quot;</span><span class="p">)</span>
-
-    <span class="n">subject</span><span class="o">.</span><span class="n">register_observer</span><span class="p">(</span><span class="n">react_observer</span><span class="p">)</span>
-    <span class="n">subject</span><span class="o">.</span><span class="n">register_observer</span><span class="p">(</span><span class="n">message_bus_observer</span><span class="p">)</span>
-
-    <span class="c1"># Notify observers about a customer status update</span>
-    <span class="n">subject</span><span class="o">.</span><span class="n">notify_observers</span><span class="p">(</span>
-        <span class="n">event</span><span class="o">=</span><span class="s2">&quot;customer_status_update&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;customer_id&quot;</span><span class="p">:</span> <span class="mi">123</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;active&quot;</span><span class="p">}</span>
+    <span class="c1"># Create a sample config tree</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">ConcreteConfigNode</span><span class="p">(</span>
+        <span class="s2">&quot;root&quot;</span><span class="p">,</span>
+        <span class="mi">1</span><span class="p">,</span>
+        <span class="p">[</span>
+            <span class="n">ConcreteConfigNode</span><span class="p">(</span><span class="s2">&quot;child1&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">ConcreteConfigNode</span><span class="p">(</span><span class="s2">&quot;child2&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>  <span class="c1"># This will cause a version mismatch</span>
+        <span class="p">],</span>
     <span class="p">)</span>
 
-    <span class="c1"># Unregister the React observer and notify again</span>
-    <span class="n">subject</span><span class="o">.</span><span class="n">unregister_observer</span><span class="p">(</span><span class="n">react_observer</span><span class="p">)</span>
-    <span class="n">subject</span><span class="o">.</span><span class="n">notify_observers</span><span class="p">(</span>
-        <span class="n">event</span><span class="o">=</span><span class="s2">&quot;pipeline_job_progress&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;job_id&quot;</span><span class="p">:</span> <span class="mi">456</span><span class="p">,</span> <span class="s2">&quot;progress&quot;</span><span class="p">:</span> <span class="s2">&quot;50%&quot;</span><span class="p">}</span>
+    <span class="c1"># Create a visitor for version validation</span>
+    <span class="n">validator</span> <span class="o">=</span> <span class="n">VersionValidationVisitor</span><span class="p">(</span><span class="n">version_id</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Traverse the config tree with the visitor</span>
+    <span class="n">root</span><span class="o">.</span><span class="n">accept</span><span class="p">(</span><span class="n">validator</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">validator</span><span class="o">.</span><span class="n">is_valid</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;All config nodes have the correct version.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Some config nodes have incorrect versions.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Valid case</span>
+    <span class="n">valid_root</span> <span class="o">=</span> <span class="n">ConcreteConfigNode</span><span class="p">(</span>
+        <span class="s2">&quot;root&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="n">ConcreteConfigNode</span><span class="p">(</span><span class="s2">&quot;child1&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">ConcreteConfigNode</span><span class="p">(</span><span class="s2">&quot;child2&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
     <span class="p">)</span>
+    <span class="n">valid_validator</span> <span class="o">=</span> <span class="n">VersionValidationVisitor</span><span class="p">(</span><span class="n">version_id</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">valid_root</span><span class="o">.</span><span class="n">accept</span><span class="p">(</span><span class="n">valid_validator</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">valid_validator</span><span class="o">.</span><span class="n">is_valid</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;All config nodes have the correct version.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Some config nodes have incorrect versions.&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># Unit tests with pytest</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_version_validation_visitor</span><span class="p">():</span>
+    <span class="c1"># Create a sample config tree with matching versions</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">ConcreteConfigNode</span><span class="p">(</span>
+        <span class="s2">&quot;root&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="n">ConcreteConfigNode</span><span class="p">(</span><span class="s2">&quot;child1&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">ConcreteConfigNode</span><span class="p">(</span><span class="s2">&quot;child2&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+    <span class="p">)</span>
+
+    <span class="n">validator</span> <span class="o">=</span> <span class="n">VersionValidationVisitor</span><span class="p">(</span><span class="n">version_id</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">root</span><span class="o">.</span><span class="n">accept</span><span class="p">(</span><span class="n">validator</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">validator</span><span class="o">.</span><span class="n">is_valid</span> <span class="o">==</span> <span class="kc">True</span>
+
+    <span class="c1"># Create a sample config tree with a version mismatch</span>
+    <span class="n">root_mismatch</span> <span class="o">=</span> <span class="n">ConcreteConfigNode</span><span class="p">(</span>
+        <span class="s2">&quot;root&quot;</span><span class="p">,</span>
+        <span class="mi">1</span><span class="p">,</span>
+        <span class="p">[</span>
+            <span class="n">ConcreteConfigNode</span><span class="p">(</span><span class="s2">&quot;child1&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">ConcreteConfigNode</span><span class="p">(</span><span class="s2">&quot;child2&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>  <span class="c1"># Mismatch here</span>
+        <span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="n">validator_mismatch</span> <span class="o">=</span> <span class="n">VersionValidationVisitor</span><span class="p">(</span><span class="n">version_id</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">root_mismatch</span><span class="o">.</span><span class="n">accept</span><span class="p">(</span><span class="n">validator_mismatch</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">validator_mismatch</span><span class="o">.</span><span class="n">is_valid</span> <span class="o">==</span> <span class="kc">False</span>
 </code></pre></div>
 <h2 id="when-to-use">When to Use</h2>
-<p>Use the Observer pattern when you need to notify multiple objects about changes in the state of another object, especially when the number of observers is dynamic and can change at runtime. It's particularly useful in event-driven systems, GUI frameworks, and distributed systems where components need to react to state changes without tight coupling.</content>
-<parameter name="filePath">/workspaces/design-patterns-gog/docs/behavioral/observer.md</p>
+<p>Use the Visitor pattern when you need to perform operations on elements of a complex object structure without modifying the classes of the elements. It's particularly useful for tree-like structures where you want to add new operations without changing the node classes, and when operations involve different types of nodes that require type-specific behavior.</content>
+<parameter name="filePath">/workspaces/design-patterns-gog/docs/behavioral/visitor.md</p>
 
 
 
