@@ -61,3 +61,4 @@ nav:
     - Mediator: behavioral/mediator.md
     - Command: behavioral/command.md
     - Chain of Responsibility: behavioral/chain_of_responsibility.md
+    - Memento: behavioral/memento.md
