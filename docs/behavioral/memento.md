@@ -1,7 +1,8 @@
-"""
-Problem: Long-running data pipelines occasionally need checkpoints and the ability to rollback to a prior state when a
-failed transformation corrupts downstream data. Design a `Memento` mechanism that captures checkpointed pipeline state
-(including offsets, schema versions, and short-lived credentials) and allows safe restoration.
+# Memento Pattern
+
+## Problem
+
+Long-running data pipelines occasionally need checkpoints and the ability to rollback to a prior state when a failed transformation corrupts downstream data. Design a `Memento` mechanism that captures checkpointed pipeline state (including offsets, schema versions, and short-lived credentials) and allows safe restoration.
 
 Constraints & hints:
 - Mementos must be stored durably and be small enough to transfer between workers.
@@ -9,8 +10,19 @@ Constraints & hints:
 - Useful for reproducible retries and disaster recovery.
 
 Deliverable: describe what a `PipelineMemento` contains and how the orchestration layer applies it to resume or rollback.
-"""
 
+## Solution
+
+The Memento pattern is used to capture and externalize an object's internal state so that the object can be restored to this state later. In this implementation, we have a `PipelineMemento` class that stores the pipeline's state, including offsets, schema versions, and credentials. The `PipelineOrchestrator` class manages the creation of mementos and restoration from them.
+
+The `PipelineMemento` contains:
+- Offsets: A dictionary mapping data source names to their current offsets.
+- Schema versions: A dictionary mapping data source names to their schema versions.
+- Credentials: A dictionary of short-lived credentials, handled securely.
+
+The orchestration layer applies the memento by restoring the state from the memento, allowing the pipeline to resume or rollback to a previous checkpoint.
+
+```python
 from abc import ABC, abstractmethod
 from typing import Dict, Any
 import copy
@@ -126,28 +138,4 @@ orchestrator.current_schema_versions = {}
 orchestrator.current_credentials = {}
 orchestrator.restore_from_memento(memento)
 print(f"Current Offsets: {orchestrator.current_offsets}")
-print(f"Current Schema Versions: {orchestrator.current_schema_versions}")
-print(f"Current Credentials: {orchestrator.current_credentials}")
-
-# Unit tests with pytest
-def test_pipeline_memento_creation_and_restoration():
-    orchestrator = PipelineOrchestrator()
-    orchestrator.current_offsets = {'sourceA': 50, 'sourceB': 75}
-    orchestrator.current_schema_versions = {'sourceA': 'v2.0', 'sourceB': 'v1.5'}
-    orchestrator.current_credentials = {'api_key': 'key123', 'api_secret': 'secret123'}
-    
-    memento = orchestrator.create_memento()
-    
-    # Change current state
-    orchestrator.current_offsets = {}
-    orchestrator.current_schema_versions = {}
-    orchestrator.current_credentials = {}
-    
-    # Restore from memento
-    orchestrator.restore_from_memento(memento)
-    
-    assert orchestrator.current_offsets == {'sourceA': 50, 'sourceB': 75}
-    assert orchestrator.current_schema_versions == {'sourceA': 'v2.0', 'sourceB': 'v1.5'}
-    assert orchestrator.current_credentials == {'api_key': 'secured_key123', 'api_secret': 'secured_secret123'}
-
-
+```
